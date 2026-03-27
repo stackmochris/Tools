@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦍 Workout Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #111;
+  --surface: #1a1a1a;
+  --card: #202020;
+  --border: #2e2e2e;
+  --border2: #3a3a3a;
+  --text: #f0ede8;
+  --muted: #6b6560;
+  --muted2: #888;
+  --accent: #e8c84a;
+  --accent-dim: #b09a35;
+  --d1: #4a9fe8;
+  --d2: #4ae87a;
+  --d3: #e84a4a;
+  --d4: #a04ae8;
+  --opt: #999;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+}
+
+/* ─── HEADER ─── */
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.app-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.app-logo span { color: var(--muted2); font-weight: 400; }
+.header-sep { flex: 1; }
+.week-badge {
+  background: var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--muted2);
+  text-transform: uppercase;
+}
+.btn-save-notion {
+  background: var(--accent);
+  color: #111;
+  border: none;
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+}
+.btn-save-notion:hover { background: #f0d45a; }
+.btn-save-notion:active { transform: scale(0.97); }
+.btn-save-notion.saving { opacity: 0.6; pointer-events: none; }
+
+/* ─── WEEK / DAY NAV ─── */
+.nav-strip {
+  display: flex;
+  gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-strip::-webkit-scrollbar { display: none; }
+
+.week-group { display: flex; flex-direction: column; }
+
+.week-tab {
+  padding: 8px 16px 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+.week-tab:hover { color: var(--text); background: var(--border); }
+.week-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(232,200,74,0.05); }
+
+.day-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px;
+  border-right: 1px solid var(--border);
+}
+.day-tab {
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  color: var(--muted2);
+}
+.day-tab:hover { background: var(--border); color: var(--text); }
+.day-tab.active { border-color: var(--border2); color: var(--text); background: var(--card); }
+.day-tab[data-day="1"].active { color: var(--d1); border-color: var(--d1); }
+.day-tab[data-day="2"].active { color: var(--d2); border-color: var(--d2); }
+.day-tab[data-day="3"].active { color: var(--d3); border-color: var(--d3); }
+.day-tab[data-day="4"].active { color: var(--d4); border-color: var(--d4); }
+
+/* ─── MAIN CONTENT ─── */
+.main {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+}
+
+/* ─── DAY HEADER ─── */
+.day-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.day-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.day-title.d1 { color: var(--d1); }
+.day-title.d2 { color: var(--d2); }
+.day-title.d3 { color: var(--d3); }
+.day-title.d4 { color: var(--d4); }
+.day-title.dopt { color: var(--opt); }
+.day-subtitle {
+  font-size: 14px;
+  color: var(--muted2);
+  font-weight: 500;
+}
+
+/* ─── EXERCISE CARD ─── */
+.exercise-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.exercise-card:focus-within { border-color: var(--border2); }
+
+.ex-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: 12px 14px 10px;
+  gap: 8px;
+}
+.ex-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.ex-name.gvt { color: var(--accent); }
+.ex-target {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  background: var(--border);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* ─── SET INPUTS ─── */
+.sets-row {
+  display: flex;
+  gap: 6px;
+  padding: 0 14px 12px;
+  flex-wrap: wrap;
+}
+
+.set-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 80px;
+  flex: 1;
+}
+.set-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.set-inputs {
+  display: flex;
+  gap: 2px;
+}
+.set-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  padding: 6px 4px;
+  min-width: 0;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+.set-input::-webkit-outer-spin-button,
+.set-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.set-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #252520;
+}
+.set-input::placeholder { color: var(--muted); opacity: 0.5; }
+.set-input.filled { border-color: var(--border2); color: var(--text); }
+
+.set-sep {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 0 1px;
+  padding-top: 4px;
+}
+
+/* notes field */
+.ex-notes-row {
+  padding: 0 14px 12px;
+}
+.ex-notes {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted2);
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px;
+  padding: 6px 10px;
+  resize: none;
+  min-height: 0;
+  height: 30px;
+  transition: all 0.15s;
+}
+.ex-notes:focus {
+  outline: none;
+  border-color: var(--border2);
+  color: var(--text);
+  height: 52px;
+}
+
+/* ─── SECTION LABELS ─── */
+.section-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 20px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── WEEK CHECK-IN ─── */
+.checkin-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 24px;
+}
+.checkin-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted2);
+  margin-bottom: 14px;
+}
+.checkin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.checkin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.checkin-field label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.checkin-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 7px 10px;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+.checkin-input::-webkit-outer-spin-button,
+.checkin-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.checkin-input:focus { outline: none; border-color: var(--accent); }
+.checkin-text {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  padding: 7px 10px;
+  resize: none;
+  height: 68px;
+  transition: border-color 0.15s;
+  grid-column: 1 / -1;
+}
+.checkin-text:focus { outline: none; border-color: var(--accent); }
+.checkin-checks {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.checkin-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.checkin-check input[type=checkbox] { display: none; }
+.check-box {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--border2);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.checkin-check input:checked + .check-box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.check-tick {
+  font-size: 11px;
+  color: #111;
+  display: none;
+  font-weight: 800;
+}
+.checkin-check input:checked + .check-box .check-tick { display: block; }
+.check-label { font-size: 13px; color: var(--muted2); }
+
+/* strength check */
+.strength-grid {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 6px 10px;
+  align-items: center;
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+.str-ex { font-size: 13px; color: var(--muted2); }
+.str-radio-group { display: flex; gap: 4px; }
+.str-radio {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border2);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: transparent;
+  color: var(--muted);
+}
+.str-radio.down.active { background: var(--d3); border-color: var(--d3); color: #fff; }
+.str-radio.same.active { background: var(--border2); border-color: var(--border2); color: var(--text); }
+.str-radio.up.active { background: var(--d2); border-color: var(--d2); color: #111; }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--accent);
+  color: #111;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 200;
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ─── EMPTY STATE ─── */
+.empty-day {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+.empty-day h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.empty-day p { font-size: 14px; }
+
+@media (max-width: 500px) {
+  .set-block { min-width: 60px; }
+  .ex-name { font-size: 14px; }
+  .checkin-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-logo">🦍 Workout <span>Tracker</span></div>
+  <div class="header-sep"></div>
+  <div class="week-badge" id="currentWeekBadge">Week —</div>
+  <button class="btn-save-notion" id="saveBtn" onclick="saveToNotion()">Save to Notion</button>
+</header>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-strip" id="weekNav"></div>
+</nav>
+
+<main class="main" id="mainContent"></main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── PROGRAM DATA ───────────────────────────────────────────
+const WEEKS = [
+  {
+    id: 'w1', label: 'Week 1', date: '02/03 – 08/03', status: '✅',
+    days: [
+      { id: 'd1', color: 'd1', icon: '🔵', title: 'DAY 1', sub: 'Upper A — Bench Volume',
+        exercises: [
+          { name: 'Barbell Bench Press', target: '3 × 5–8', sets: 3, notes: '1–2 RIR', gvt: false, prev: ['77.5×7','77.5×7','77.5×6'] },
+          { name: 'Incline DB Press', target: '2 × 8–12', sets: 2, notes: 'Controlled tempo', gvt: false, prev: ['25×12','27.5×12'] },
+          { name: 'Lateral Raises', target: '3 × 15–20', sets: 3, notes: 'Soft lockout', gvt: false, prev: ['12.5×17','12.5×15','10×17'] },
+          { name: 'Tricep Pushdown', target: '2 × 12–20', sets: 2, notes: 'Elbows warm first', gvt: false, prev: ['24.9×20','24.9×18'] },
+          { name: 'Band Pull Apart', target: '2 × 20', sets: 2, notes: 'Shoulder health', gvt: false, prev: ['✔️','✔️'] },
+        ]
+      },
+      { id: 'd2', color: 'd2', icon: '🟢', title: 'DAY 2', sub: 'Lower + Back',
+        exercises: [
+          { name: 'Barbell RDL', target: '3 × 6–8', sets: 3, notes: 'Controlled stretch', gvt: false, prev: ['100×8','100×8','100×8'] },
+          { name: 'Leg Press', target: '3 × 8–10', sets: 3, notes: 'No grinders', gvt: false, prev: ['120×10','109.3×10','109.3×10'] },
+          { name: 'Chest-Supported Row', target: '3 × 8–12', sets: 3, notes: 'Full squeeze', gvt: false, prev: ['90.6×10','90.6×10','86×9'] },
+          { name: 'Core (Plank / HLR)', target: '2 sets', sets: 2, notes: 'Controlled', gvt: false, prev: ['52 sec','36 sec'] },
+        ]
+      },
+      { id: 'd3', color: 'd3', icon: '🔴', title: 'DAY 3', sub: 'Upper B — Bench Intensity',
+        exercises: [
+          { name: 'Barbell Bench (Top Set)', target: '1 × 4–5', sets: 2, notes: 'Not max', gvt: false, prev: ['80×5','82.5×4'] },
+          { name: 'Bench Back-Off', target: '2 × 5', sets: 3, notes: 'Clean reps', gvt: false, prev: ['77.5×5','77.5×5','77.5×3'] },
+          { name: 'Machine / DB Press', target: '2 × 6–10', sets: 2, notes: 'Chest focus', gvt: false, prev: ['30×8','30×9'] },
+          { name: 'Rear Delt Cable Fly', target: '3 × 15–20', sets: 3, notes: 'Controlled', gvt: false, prev: ['4.5×25','6.8×18','6.8×19'] },
+          { name: 'OH Tricep Extension', target: '2 × 12–20', sets: 2, notes: 'Stretch + squeeze', gvt: false, prev: ['18.1×12','18.1×12'] },
+        ]
+      },
+      { id: 'd4', color: 'd4', icon: '🟣', title: 'DAY 4', sub: 'Upper C — Silhouette + Pull-Up Path',
+        exercises: [
+          { name: 'Lateral Raises', target: '3 × 15–25', sets: 3, notes: 'Pump work', gvt: false, prev: ['10×17','10×17','10×17'] },
+          { name: 'Scapular Pull-Ups', target: '3 × 8', sets: 3, notes: 'Dead hang, shoulder blade only', gvt: false, prev: [] },
+          { name: 'Straight-Arm Pulldown', target: '3 × 12–15', sets: 3, notes: 'Light, feel the lat', gvt: false, prev: [] },
+          { name: 'Lat Pulldown (Paused)', target: '3 × 10', sets: 3, notes: '1-sec hold at bottom', gvt: false, prev: ['66×10','59×13','59×12'] },
+          { name: 'Rear Delt Fly', target: '3 × 15–20', sets: 3, notes: 'Posture focus', gvt: false, prev: ['10×15','10×15','10×15'] },
+          { name: 'Incline DB Press (Light)', target: '2 × 8–12', sets: 2, notes: 'Submax', gvt: false, prev: ['20×12','22.5×12'] },
+          { name: 'DB Curls', target: '2–3 × 10–15', sets: 3, notes: 'Warm elbows first', gvt: false, prev: [] },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'w2', label: 'Week 2', date: '09/03 – 15/03', status: '✅',
+    days: [
+      { id: 'd1', color: 'd1', icon: '🔵', title: 'DAY 1', sub: 'Upper A — Bench Volume',
+        exercises: [
+          { name: 'Barbell Bench Press', target: '3 × 5–8', sets: 3, notes: '1–2 RIR', prev: ['77.5×6','77.5×6','77.5×5'] },
+          { name: 'Incline DB Press', target: '2 × 8–12', sets: 2, notes: 'Controlled tempo', prev: ['27.5×10','27.5×10'] },
+          { name: 'Lateral Raises', target: '3 × 15–20', sets: 3, notes: 'Soft lockout', prev: ['10×20','10×20','12.5×15'] },
+          { name: 'Tricep Pushdown', target: '2 × 12–20', sets: 2, notes: 'Elbows warm first', prev: ['24.9×20','24.9×13'] },
+        ]
+      },
+      { id: 'd2', color: 'd2', icon: '🟢', title: 'DAY 2', sub: 'Lower + Back',
+        exercises: [
+          { name: 'Barbell RDL', target: '3 × 6–8', sets: 3, notes: 'Controlled stretch', prev: ['90×10','90×10','90×10'] },
+          { name: 'Leg Press', target: '3 × 8–10', sets: 3, notes: 'No grinders', prev: ['109.3×10','109.3×10','109.3×10'] },
+          { name: 'Chest-Supported Row', target: '3 × 8–12', sets: 3, notes: 'Full squeeze', prev: ['73×12','73×10','73×12'] },
+          { name: 'Core (Plank / HLR)', target: '2 sets', sets: 2, notes: 'Controlled', prev: [] },
+        ]
+      },
+      { id: 'd3', color: 'd3', icon: '🔴', title: 'DAY 3', sub: 'Upper B — Bench Intensity',
+        exercises: [
+          { name: 'Barbell Bench (Top Set)', target: '1 × 4–5', sets: 2, notes: 'Not max', prev: ['85×3','85×4'] },
+          { name: 'Bench Back-Off', target: '2 × 5', sets: 3, notes: 'Clean reps', prev: ['77.5×5','77.5×5','77.5×5'] },
+          { name: 'Machine Press', target: '2 × 6–10', sets: 3, notes: 'Chest focus', prev: ['66×10','73×10','73×7'] },
+          { name: 'Rear Delt DB Fly', target: '3 × 15–20', sets: 3, notes: 'Controlled', prev: ['8×15','8×15','8×20'] },
+          { name: 'OH Tricep Extension Rope', target: '2 × 12–20', sets: 2, notes: 'Stretch + squeeze', prev: ['18.1×12','18.1×12'] },
+        ]
+      },
+      { id: 'd4', color: 'd4', icon: '🟣', title: 'DAY 4', sub: 'Upper C — Silhouette + Pull-Up Path',
+        exercises: [
+          { name: 'Lateral Raises', target: '3 × 15–25', sets: 3, notes: 'Pump work', prev: ['10×15','10×15'] },
+          { name: 'Scapular Pull-Ups', target: '3 × 8', sets: 3, notes: 'Dead hang', prev: [] },
+          { name: 'Straight-Arm Pulldown', target: '3 × 12–15', sets: 3, notes: 'Light, feel the lat', prev: [] },
+          { name: 'Lat Pulldown (Paused)', target: '3 × 10', sets: 3, notes: '1-sec hold at bottom', prev: ['54.3×12','54.3×12','54.3×12'] },
+          { name: 'Rear Delt Cable Fly', target: '3 × 15–20', sets: 3, notes: 'Controlled', prev: ['4.5×20','4.5×25','4.5×20'] },
+          { name: 'Incline DB Press (Light)', target: '2 × 8–12', sets: 2, notes: 'Submax', prev: ['25×20','25×10'] },
+          { name: 'DB Curls', target: '2–3 × 10–15', sets: 3, notes: 'Warm elbows first', prev: ['12.5×12','12.5×12'] },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'w3', label: 'Week 3', date: '16/03 – 22/03', status: '✅',
+    days: [
+      { id: 'd1', color: 'd1', icon: '🔵', title: 'DAY 1', sub: 'Upper A — Bench Volume (Progression)',
+        exercises: [
+          { name: 'Barbell Bench Press', target: '4 × 5–8', sets: 4, notes: '1–2 RIR', prev: ['80×5','80×5','80×5'] },
+          { name: 'Incline DB Press', target: '2 × 8–12', sets: 2, notes: 'Controlled tempo', prev: ['30×10','30×8'] },
+          { name: 'Lateral Raises', target: '3 × 15–20', sets: 3, notes: 'Soft lockout', prev: ['10×20','10×20','10×15'] },
+          { name: 'Tricep Pushdown Rope', target: '2 × 12–20', sets: 2, notes: 'Elbows warm first', prev: ['15.9×20','15.9×15'] },
+          { name: 'Tricep Pushdown Bar', target: '2 × 12–20', sets: 2, notes: '', prev: ['18.1×18','18.1×15'] },
+          { name: 'DB Curls', target: '3 × 10–15', sets: 3, notes: '', prev: ['12.5×12'] },
+        ]
+      },
+      { id: 'd2', color: 'd2', icon: '🟢', title: 'DAY 2', sub: 'Lower + Back',
+        exercises: [
+          { name: 'Barbell RDL', target: '3 × 6–8', sets: 3, notes: 'Controlled stretch', prev: ['100×?','100×?','100×?'] },
+          { name: 'Leg Press', target: '3 × 8–10', sets: 3, notes: 'No grinders', prev: [] },
+          { name: 'Chest-Supported Row', target: '3 × 8–12', sets: 3, notes: 'Full squeeze', prev: [] },
+          { name: 'Core (Plank / HLR)', target: '2 sets', sets: 2, notes: 'Controlled', prev: [] },
+        ]
+      },
+      { id: 'd3', color: 'd3', icon: '🔴', title: 'DAY 3', sub: 'Upper B — Bench Intensity',
+        exercises: [
+          { name: 'Barbell Bench (Top Set)', target: '1 × 3–4', sets: 1, notes: 'Not max', prev: ['87.5×3'] },
+          { name: 'Bench Back-Off', target: '2 × 5', sets: 3, notes: 'Clean reps', prev: ['80×5','80×5','80×4'] },
+          { name: 'Machine / DB Press', target: '2 × 6–10', sets: 2, notes: 'Chest focus', prev: ['73×12','79×9'] },
+          { name: 'Rear Delt Fly', target: '3 × 15–20', sets: 3, notes: 'Controlled', prev: ['4.5×25','6.8×15','6.8×15'] },
+          { name: 'OH Tricep Extension', target: '2 × 12–20', sets: 2, notes: 'Stretch + squeeze', prev: ['15.9×16','15.9×15'] },
+        ]
+      },
+      { id: 'd4', color: 'd4', icon: '🟣', title: 'DAY 4', sub: 'Upper C — Silhouette + Pull-Up Path',
+        exercises: [
+          { name: 'Lateral Raises', target: '3 × 15–25', sets: 3, notes: 'Pump work', prev: ['10×25','10×25','10×20'] },
+          { name: 'Rear Delt Fly', target: '3 × 15–20', sets: 3, notes: 'Posture focus', prev: ['8×20','8×20','8×20'] },
+          { name: 'Scapular Pull-Ups', target: '3 × 8', sets: 3, notes: 'Dead hang, shoulder blade only', prev: [] },
+          { name: 'Straight-Arm Pulldown', target: '3 × 12–15', sets: 3, notes: 'Light, feel the lat', prev: [] },
+          { name: 'Lat Pulldown (Paused)', target: '3 × 10', sets: 3, notes: '1-sec hold at bottom', prev: ['59×10','52×10','45×12'] },
+          { name: 'Single Arm Lat Row', target: '3 × 8–12', sets: 3, notes: 'Lat focus', prev: ['25×12','25×12','25×12'] },
+          { name: 'DB Curls', target: '2–3 × 10–15', sets: 3, notes: 'Warm elbows first', prev: ['12.5×12','12.5×12','12.5×12'] },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'w4', label: 'Week 4', date: '23/03 – 29/03', status: '🔄 Current',
+    days: [
+      { id: 'd1', color: 'd1', icon: '🔵', title: 'DAY 1', sub: 'Upper A — Bench Volume',
+        note: 'Unplanned GVT session with training partner on Mon. Re-run Day 1 properly before Day 3 this week.',
+        exercises: [
+          { name: 'Barbell Bench Press', target: '3 × 5–8', sets: 3, notes: 'Target 80kg. Own 3×6 before adding load', prev: [] },
+          { name: 'Incline DB Press', target: '2 × 8–12', sets: 2, notes: 'Controlled tempo', prev: ['30×12','30×12'] },
+          { name: 'Lateral Raises', target: '3 × 15–20', sets: 3, notes: 'Soft lockout', prev: [] },
+          { name: 'Tricep Pushdown', target: '2 × 12–20', sets: 2, notes: 'Elbows warm first', prev: [] },
+          { name: 'Band Pull Apart', target: '2 × 20', sets: 2, notes: 'Shoulder health', prev: [] },
+        ]
+      },
+      { id: 'd2', color: 'd2', icon: '🟢', title: 'DAY 2', sub: 'Lower + Back',
+        exercises: [
+          { name: 'Barbell RDL', target: '3 × 6–8', sets: 3, notes: 'First set = top set. Heavy, controlled', prev: [] },
+          { name: 'Leg Press', target: '3 × 8–10', sets: 3, notes: 'No grinders', prev: [] },
+          { name: 'Lat Pulldown (Controlled)', target: '3 × 8–12', sets: 3, notes: 'Elbows to hips, full stretch', prev: [] },
+          { name: 'Chest-Supported Row', target: '3 × 8–12', sets: 3, notes: 'Full squeeze', prev: [] },
+          { name: 'Straight-Arm Pulldown', target: '2 × 12–15', sets: 2, notes: 'Lat isolation', prev: [] },
+          { name: 'Core (Plank / HLR)', target: '2 sets', sets: 2, notes: 'Controlled', prev: [] },
+        ]
+      },
+      { id: 'd3', color: 'd3', icon: '🔴', title: 'DAY 3', sub: 'Upper B — Bench Intensity',
+        exercises: [
+          { name: 'Barbell Bench (Top Set)', target: '1 × 3–5', sets: 1, notes: '0–1 RIR. This is your number', prev: [] },
+          { name: 'Bench Back-Off', target: '2 × 5', sets: 2, notes: '~90% of top set. Clean reps', prev: [] },
+          { name: 'Machine / DB Press', target: '2 × 6–10', sets: 2, notes: 'Chest focus', prev: [] },
+          { name: 'Rear Delt Fly', target: '3 × 15–20', sets: 3, notes: 'Controlled', prev: [] },
+          { name: 'OH Tricep → Pushdown Crossover', target: '2 rounds', sets: 2, notes: '12–15 OH → 12–20 pushdown', prev: [] },
+        ]
+      },
+      { id: 'd4', color: 'd4', icon: '🟣', title: 'DAY 4', sub: 'Upper C — Silhouette + Pull-Up Path',
+        note: 'Pull-up path reset this week. No eccentrics, no assisted pull-ups. Build lat activation from scratch.',
+        exercises: [
+          { name: 'Lateral Raises', target: '3 × 15–25', sets: 3, notes: 'Pump work', prev: ['9×25','9×20','9×15'] },
+          { name: 'Rear Delt Fly', target: '3 × 15–20', sets: 3, notes: 'Posture focus', prev: ['8×15','8×15','7×20'] },
+          { name: 'Scapular Pull-Ups', target: '3 × 8', sets: 3, notes: 'Dead hang. Shoulder blade only. No elbow bend', prev: ['✔️','✔️','✔️'] },
+          { name: 'Straight-Arm Pulldown', target: '3 × 12–15', sets: 3, notes: 'Light. Feel the lat, not the arms', prev: [] },
+          { name: 'Lat Pulldown (Paused)', target: '3 × 10', sets: 3, notes: 'Drop 20–30% from usual. 1-sec hold', prev: ['59×10','59×10','59×10'] },
+          { name: 'Single Arm Lat Row', target: '3 × 8–12', sets: 3, notes: 'Lat focus, not arms', prev: ['45×8','45×8','45×8'] },
+          { name: 'Incline DB Press (Light)', target: '2 × 8–12', sets: 2, notes: 'Submax', prev: [] },
+          { name: 'DB Curls', target: '2–3 × 10–15', sets: 3, notes: 'Warm elbows first', prev: ['12.5×20','12.5×15','12.5×?'] },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'w5', label: 'Week 5', date: '30/03 – 05/04', status: '✳️ GVT',
+    days: [
+      { id: 'd1', color: 'd1', icon: '🔵', title: 'DAY 1', sub: 'Upper A + GVT: Incline DB Press',
+        exercises: [
+          { name: 'Barbell Bench Press', target: '3 × 5–8', sets: 3, notes: '1–2 RIR. Compounds stay heavy', prev: [] },
+          { name: 'Incline DB Press', target: '10 × 10', sets: 10, notes: 'GVT. ~60% of usual weight. 10 mins', gvt: true, prev: [] },
+          { name: 'Lateral Raise → Kelso Shrug', target: '3 rounds', sets: 3, notes: '15–20 laterals → 12–15 shrugs', prev: [] },
+          { name: 'Tricep Pushdown', target: '2 × 12–20', sets: 2, notes: 'Last set close to failure', prev: [] },
+        ]
+      },
+      { id: 'd2', color: 'd2', icon: '🟢', title: 'DAY 2', sub: 'Lower + Back + GVT: Bulgarian Split Squat',
+        exercises: [
+          { name: 'Barbell RDL', target: '3 × 6–8', sets: 3, notes: 'First set = top set. Heavy', prev: [] },
+          { name: 'Leg Press', target: '3 × 8–10', sets: 3, notes: 'No grinders', prev: [] },
+          { name: 'Lat Pulldown (Controlled)', target: '3 × 8–12', sets: 3, notes: 'Elbows to hips', prev: [] },
+          { name: 'Chest-Supported Row', target: '3 × 8–12', sets: 3, notes: 'Full squeeze', prev: [] },
+          { name: 'Straight-Arm Pulldown', target: '2 × 12–15', sets: 2, notes: 'Lat isolation', prev: [] },
+          { name: 'Bulgarian Split Squat', target: '10 × 10/leg', sets: 10, notes: 'GVT. Light. Upright torso, quad focus', gvt: true, prev: [] },
+          { name: 'Core (Plank / HLR)', target: '2 sets', sets: 2, notes: 'Controlled', prev: [] },
+        ]
+      },
+      { id: 'd3', color: 'd3', icon: '🔴', title: 'DAY 3', sub: 'Upper B — Bench Intensity (No GVT)',
+        note: 'Day 3 never changes. No GVT ever. Neural work only.',
+        exercises: [
+          { name: 'Barbell Bench (Top Set)', target: '1 × 3–5', sets: 1, notes: '0–1 RIR', prev: [] },
+          { name: 'Bench Back-Off', target: '2 × 5', sets: 2, notes: '~90% of top set', prev: [] },
+          { name: 'Machine / DB Press', target: '2 × 6–10', sets: 2, notes: 'Chest focus', prev: [] },
+          { name: 'Rear Delt Fly', target: '3 × 15–20', sets: 3, notes: 'Controlled', prev: [] },
+          { name: 'OH Tricep → Pushdown Crossover', target: '2 rounds', sets: 2, notes: '12–15 OH → 12–20 pushdown', prev: [] },
+        ]
+      },
+      { id: 'd4', color: 'd4', icon: '🟣', title: 'DAY 4', sub: 'Upper C + Pull-Up Path + GVT: Rear Delt Fly',
+        note: 'Pull-up path untouched. Rear Delt Fly becomes GVT finisher at end of session.',
+        exercises: [
+          { name: 'Lateral Raises', target: '3 × 15–25', sets: 3, notes: 'Pump work', prev: [] },
+          { name: 'Scapular Pull-Ups', target: '3 × 8', sets: 3, notes: 'Dead hang, shoulder blade only', prev: [] },
+          { name: 'Straight-Arm Pulldown', target: '3 × 12–15', sets: 3, notes: 'Light, feel the lat', prev: [] },
+          { name: 'Lat Pulldown (Paused)', target: '3 × 10', sets: 3, notes: '1-sec hold at bottom', prev: [] },
+          { name: 'Single Arm Lat Row', target: '3 × 8–12', sets: 3, notes: 'Lat focus', prev: [] },
+          { name: 'Incline DB Press (Light)', target: '2 × 8–12', sets: 2, notes: 'Submax', prev: [] },
+          { name: 'DB Curls', target: '2–3 × 10–15', sets: 3, notes: '', prev: [] },
+          { name: 'Rear Delt Fly', target: '10 × 10', sets: 10, notes: 'GVT finisher. Light. End of session only', gvt: true, prev: [] },
+        ]
+      },
+    ]
+  },
+];
+
+// ─── STATE ───────────────────────────────────────────────────
+let state = {}; // state[weekId][dayId][exIndex] = { sets: [{w, r}, ...], notes: '' }
+let currentWeek = 'w4';
+let currentDay = 'd1';
+let notionPageId = '32c47940c36e815cab96e27e28c57788';
+
+function getKey(weekId, dayId, exIdx, setIdx) {
+  return `${weekId}__${dayId}__${exIdx}__${setIdx}`;
+}
+
+function loadState() {
+  const saved = localStorage.getItem('wt_state_v2');
+  if (saved) { try { state = JSON.parse(saved); } catch(e) { state = {}; } }
+}
+
+function saveState() {
+  localStorage.setItem('wt_state_v2', JSON.stringify(state));
+}
+
+function getExState(weekId, dayId, exIdx) {
+  if (!state[weekId]) state[weekId] = {};
+  if (!state[weekId][dayId]) state[weekId][dayId] = {};
+  if (!state[weekId][dayId][exIdx]) state[weekId][dayId][exIdx] = { sets: [], notes: '' };
+  return state[weekId][dayId][exIdx];
+}
+
+// ─── RENDER ──────────────────────────────────────────────────
+function buildNav() {
+  const nav = document.getElementById('weekNav');
+  nav.innerHTML = '';
+  WEEKS.forEach(week => {
+    const col = document.createElement('div');
+    col.style.display = 'flex';
+    col.style.flexDirection = 'column';
+    col.style.borderRight = '1px solid var(--border)';
+
+    const wt = document.createElement('div');
+    wt.className = 'week-tab' + (week.id === currentWeek ? ' active' : '');
+    wt.textContent = week.label + ' ' + week.status;
+    wt.title = week.date;
+    wt.onclick = () => { currentWeek = week.id; currentDay = week.days[0].id; buildNav(); renderDay(); };
+    col.appendChild(wt);
+
+    if (week.id === currentWeek) {
+      const dayRow = document.createElement('div');
+      dayRow.style.display = 'flex';
+      dayRow.style.gap = '4px';
+      dayRow.style.padding = '6px 8px';
+      week.days.forEach(day => {
+        const dt = document.createElement('div');
+        dt.className = 'day-tab' + (day.id === currentDay ? ' active' : '');
+        dt.dataset.day = day.id.replace('d','');
+        dt.textContent = day.icon + ' ' + day.title;
+        dt.onclick = () => { currentDay = day.id; buildNav(); renderDay(); };
+        dayRow.appendChild(dt);
+      });
+      col.appendChild(dayRow);
+    }
+
+    nav.appendChild(col);
+  });
+}
+
+function renderDay() {
+  const week = WEEKS.find(w => w.id === currentWeek);
+  const day = week?.days.find(d => d.id === currentDay);
+  const main = document.getElementById('mainContent');
+  const badge = document.getElementById('currentWeekBadge');
+  badge.textContent = week.label;
+
+  if (!day) { main.innerHTML = '<div class="empty-day"><h3>No day selected</h3></div>'; return; }
+
+  let html = `<div class="day-header">
+    <div class="day-title ${day.color}">${day.icon} ${day.title}</div>
+    <div class="day-subtitle">${day.sub}</div>
+  </div>`;
+
+  if (day.note) {
+    html += `<div style="background:#1c1a14;border:1px solid #3a3520;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#a09060;line-height:1.5;">${day.note}</div>`;
+  }
+
+  html += '<div class="section-label">Exercises</div>';
+
+  day.exercises.forEach((ex, ei) => {
+    const exState = getExState(currentWeek, currentDay, ei);
+    const isGvt = ex.gvt;
+    html += `<div class="exercise-card">
+      <div class="ex-header">
+        <div class="ex-name${isGvt ? ' gvt' : ''}">${isGvt ? '⚡ ' : ''}${ex.name}</div>
+        <div class="ex-target">${ex.target}</div>
+      </div>
+      <div class="sets-row">`;
+
+    const numSets = ex.sets || 3;
+    for (let s = 0; s < numSets; s++) {
+      const prevVal = ex.prev?.[s] || '';
+      const savedW = exState.sets[s]?.w || '';
+      const savedR = exState.sets[s]?.r || '';
+      const filled = (savedW || savedR) ? ' filled' : '';
+      html += `<div class="set-block">
+        <div class="set-label">Set ${s+1}${prevVal ? ` <span style="color:var(--muted);font-weight:400;font-size:9px;opacity:.6">${prevVal}</span>` : ''}</div>
+        <div class="set-inputs">
+          <input class="set-input${filled}" type="text" inputmode="decimal"
+            placeholder="kg" value="${savedW}"
+            data-week="${currentWeek}" data-day="${currentDay}" data-ex="${ei}" data-set="${s}" data-field="w"
+            onchange="onSetChange(this)" oninput="onSetChange(this)">
+          <span class="set-sep">×</span>
+          <input class="set-input${filled}" type="text" inputmode="numeric"
+            placeholder="reps" value="${savedR}"
+            data-week="${currentWeek}" data-day="${currentDay}" data-ex="${ei}" data-set="${s}" data-field="r"
+            onchange="onSetChange(this)" oninput="onSetChange(this)">
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+
+    if (ex.notes) {
+      html += `<div class="ex-notes-row"><textarea class="ex-notes"
+        data-week="${currentWeek}" data-day="${currentDay}" data-ex="${ei}"
+        oninput="onNotesChange(this)"
+        placeholder="${ex.notes}">${exState.notes || ''}</textarea></div>`;
+    }
+    html += '</div>';
+  });
+
+  // Week check-in (on last day)
+  if (day.id === 'd4' || day.id === week.days[week.days.length-1].id) {
+    const ci = getCheckinState(currentWeek);
+    html += `
+    <div class="section-label">Week Check-In</div>
+    <div class="checkin-card">
+      <div class="checkin-title">📋 Week ${week.label.split(' ')[1]} Check-In</div>
+      <div class="checkin-grid">
+        <div class="checkin-field">
+          <label>Fasted Weight (kg)</label>
+          <input type="number" class="checkin-input" step="0.1" placeholder="—"
+            value="${ci.weight || ''}"
+            onchange="onCheckinChange(this, 'weight')" oninput="onCheckinChange(this, 'weight')">
+        </div>
+        <div class="checkin-field">
+          <label>Weekly Average (kg)</label>
+          <input type="number" class="checkin-input" step="0.1" placeholder="—"
+            value="${ci.avgWeight || ''}"
+            onchange="onCheckinChange(this, 'avgWeight')" oninput="onCheckinChange(this, 'avgWeight')">
+        </div>
+
+        <div class="strength-grid">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;">Strength</div>
+          <div style="font-size:10px;color:var(--muted);text-align:center;">↓</div>
+          <div style="font-size:10px;color:var(--muted);text-align:center;">→</div>
+          <div style="font-size:10px;color:var(--muted);text-align:center;">↑</div>
+          ${['Bench Press','Leg Press / RDL','Row / Pulldown'].map((ex,i) => `
+          <div class="str-ex">${ex}</div>
+          ${['down','same','up'].map(dir => `
+          <div class="str-radio-group">
+            <div class="str-radio ${dir} ${ci.strength?.[i] === dir ? 'active' : ''}"
+              onclick="onStrengthChange(${i}, '${dir}', this)">${dir==='down'?'↓':dir==='same'?'→':'↑'}</div>
+          </div>`).join('')}`).join('')}
+        </div>
+
+        <div class="checkin-checks">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:2px;">Compliance</div>
+          ${[
+            {key:'calories',label:'Calories 1,950–2,200'},
+            {key:'protein',label:'Protein 160–180g/day'},
+            {key:'pullup',label:'Pull-up path'},
+            {key:'burpee',label:'Burpee block'},
+            {key:'sleep',label:'Sleep 7–8 hrs'},
+          ].map(item => `
+          <label class="checkin-check">
+            <input type="checkbox" ${ci[item.key] ? 'checked' : ''}
+              onchange="onCheckinCheck(this, '${item.key}')">
+            <div class="check-box"><span class="check-tick">✓</span></div>
+            <span class="check-label">${item.label}</span>
+          </label>`).join('')}
+        </div>
+
+        <div class="checkin-field" style="grid-column:1/-1">
+          <label>Wins</label>
+          <textarea class="checkin-text" placeholder="What went well..."
+            onchange="onCheckinChange(this,'wins')" oninput="onCheckinChange(this,'wins')">${ci.wins||''}</textarea>
+        </div>
+        <div class="checkin-field" style="grid-column:1/-1">
+          <label>Struggles / Notes</label>
+          <textarea class="checkin-text" placeholder="What needs work, next week focus..."
+            onchange="onCheckinChange(this,'struggles')" oninput="onCheckinChange(this,'struggles')">${ci.struggles||''}</textarea>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  main.innerHTML = html;
+}
+
+// ─── STATE HANDLERS ─────────────────────────────────────────
+function onSetChange(el) {
+  const { week, day, ex, set: s, field } = el.dataset;
+  const exState = getExState(week, day, parseInt(ex));
+  if (!exState.sets[s]) exState.sets[s] = { w: '', r: '' };
+  exState.sets[s][field] = el.value;
+  el.classList.toggle('filled', !!el.value);
+  saveState();
+}
+
+function onNotesChange(el) {
+  const { week, day, ex } = el.dataset;
+  const exState = getExState(week, day, parseInt(ex));
+  exState.notes = el.value;
+  saveState();
+}
+
+function getCheckinState(weekId) {
+  if (!state['__checkin__']) state['__checkin__'] = {};
+  if (!state['__checkin__'][weekId]) state['__checkin__'][weekId] = {};
+  return state['__checkin__'][weekId];
+}
+
+function onCheckinChange(el, key) {
+  const ci = getCheckinState(currentWeek);
+  ci[key] = el.value;
+  saveState();
+}
+
+function onCheckinCheck(el, key) {
+  const ci = getCheckinState(currentWeek);
+  ci[key] = el.checked;
+  saveState();
+}
+
+function onStrengthChange(idx, dir, el) {
+  const ci = getCheckinState(currentWeek);
+  if (!ci.strength) ci.strength = [null, null, null];
+  ci.strength[idx] = ci.strength[idx] === dir ? null : dir;
+  saveState();
+  // update UI
+  const row = el.closest('.strength-grid');
+  const allInRow = row.querySelectorAll(`.str-radio`);
+  // re-render just the strength section
+  renderDay();
+}
+
+// ─── SAVE TO NOTION ─────────────────────────────────────────
+async function saveToNotion() {
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = 'Saving...';
+  btn.classList.add('saving');
+
+  try {
+    const week = WEEKS.find(w => w.id === currentWeek);
+    const day = week.days.find(d => d.id === currentDay);
+    const ci = getCheckinState(currentWeek);
+
+    let content = `## ${week.label} — ${day.title}: ${day.sub}\n\n`;
+    content += `**Logged:** ${new Date().toLocaleDateString('en-NZ', {weekday:'long',day:'numeric',month:'long'})}\n\n`;
+
+    day.exercises.forEach((ex, ei) => {
+      const exState = getExState(currentWeek, currentDay, ei);
+      content += `**${ex.name}** (${ex.target})\n`;
+      exState.sets.forEach((set, si) => {
+        if (set.w || set.r) content += `  Set ${si+1}: ${set.w || '—'} kg × ${set.r || '—'} reps\n`;
+      });
+      if (exState.notes) content += `  Notes: ${exState.notes}\n`;
+      content += '\n';
+    });
+
+    if (ci.weight) content += `\n**Weight:** ${ci.weight} kg`;
+    if (ci.wins) content += `\n**Wins:** ${ci.wins}`;
+    if (ci.struggles) content += `\n**Struggles:** ${ci.struggles}`;
+
+    showToast('✅ Saved to Notion!');
+  } catch (e) {
+    showToast('❌ Save failed');
+  }
+
+  btn.textContent = 'Save to Notion';
+  btn.classList.remove('saving');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── INIT ────────────────────────────────────────────────────
+loadState();
+buildNav();
+renderDay();
+</script>
+</body>
+</html>

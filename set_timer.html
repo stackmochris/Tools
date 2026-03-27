@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10×10 Set Timer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --accent: #e8ff47;
+    --accent-dim: #b8cc30;
+    --text: #f0f0f0;
+    --muted: #666;
+    --danger: #ff4747;
+    --warn: #ff9f47;
+    --go: #47ff8a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 0%, #2a3a0080 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .flash-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+    transition: opacity 0.05s;
+  }
+  .flash-overlay.active { opacity: 0.15; }
+
+  .container {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header {
+    text-align: center;
+    letter-spacing: 0.15em;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* SET INDICATORS */
+  .set-track {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+  }
+  .set-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s ease;
+  }
+  .set-dot.done { background: var(--accent-dim); }
+  .set-dot.active {
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    transform: scale(1.3);
+  }
+
+  /* BIG CLOCK */
+  .clock-wrap {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  svg.ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
+  .ring-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s linear, stroke 0.3s;
+  }
+  .ring-fill.warn { stroke: var(--warn); }
+  .ring-fill.danger { stroke: var(--danger); }
+
+  .clock-inner {
+    text-align: center;
+    z-index: 1;
+  }
+
+  .set-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .time-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 86px;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: var(--text);
+    transition: color 0.3s;
+  }
+  .time-display.warn { color: var(--warn); }
+  .time-display.danger { color: var(--danger); }
+
+  .rep-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 0.08em;
+  }
+
+  /* REP COUNTER */
+  .rep-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 24px;
+    width: 100%;
+  }
+  .rep-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    flex: 1;
+  }
+  .rep-count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 48px;
+    text-align: center;
+  }
+  .rep-btns { display: flex; gap: 6px; }
+  .rep-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .rep-btn:hover { background: var(--border); border-color: #444; }
+  .rep-btn:active { transform: scale(0.93); }
+
+  /* CONTROLS */
+  .controls { display: flex; gap: 10px; width: 100%; }
+
+  .btn {
+    flex: 1;
+    height: 52px;
+    border-radius: 12px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-start {
+    background: var(--accent);
+    color: #0d0d0d;
+  }
+  .btn-start:hover { background: #d4eb30; }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+
+  /* STATUS MESSAGE */
+  .status-msg {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 0.05em;
+    min-height: 18px;
+    transition: all 0.3s;
+  }
+  .status-msg.go { color: var(--go); font-weight: 600; }
+
+  /* SETTINGS */
+  .settings-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+  .setting-block {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .setting-block label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+  }
+  .setting-block input {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    width: 100%;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .setting-block input::-webkit-outer-spin-button,
+  .setting-block input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* COMPLETE state */
+  .complete-banner {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a2200, #0d1a00);
+    border: 1px solid var(--accent-dim);
+    border-radius: 16px;
+    width: 100%;
+  }
+  .complete-banner.show { display: block; }
+  .complete-banner h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .complete-banner p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<div class="container">
+  <div class="header">Interval Workout Timer</div>
+
+  <!-- Settings (shown before start) -->
+  <div class="settings-row" id="settingsRow">
+    <div class="setting-block">
+      <label>Sets</label>
+      <input type="number" id="totalSets" value="10" min="1" max="20">
+    </div>
+    <div class="setting-block">
+      <label>Reps/Set</label>
+      <input type="number" id="repsPerSet" value="10" min="1" max="100">
+    </div>
+    <div class="setting-block">
+      <label>Sec/Set</label>
+      <input type="number" id="secsPerSet" value="60" min="10" max="300">
+    </div>
+  </div>
+
+  <!-- Set dots -->
+  <div class="set-track" id="setTrack"></div>
+
+  <!-- Clock ring -->
+  <div class="clock-wrap">
+    <svg class="ring" viewBox="0 0 240 240">
+      <circle class="ring-bg" cx="120" cy="120" r="108"/>
+      <circle class="ring-fill" id="ringFill" cx="120" cy="120" r="108"
+        stroke-dasharray="678.6" stroke-dashoffset="0"/>
+    </svg>
+    <div class="clock-inner">
+      <div class="set-label" id="setLabel">Set — / —</div>
+      <div class="time-display" id="timeDisplay">60</div>
+      <div class="rep-hint" id="repHint">Press Start</div>
+    </div>
+  </div>
+
+  <!-- Rep counter -->
+  <div class="rep-row">
+    <div class="rep-label">Reps<br>this set</div>
+    <div class="rep-count" id="repCount">0</div>
+    <div class="rep-btns">
+      <button class="rep-btn" id="repMinus">−</button>
+      <button class="rep-btn" id="repPlus">+</button>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="btn btn-start" id="startBtn">START</button>
+    <button class="btn btn-secondary" id="resetBtn">RESET</button>
+  </div>
+
+  <div class="status-msg" id="statusMsg">Configure sets above, then press Start</div>
+
+  <!-- Complete banner -->
+  <div class="complete-banner" id="completeBanner">
+    <h2>Done! 💪</h2>
+    <p id="completeStats"></p>
+  </div>
+</div>
+
+<script>
+const CIRCUMFERENCE = 2 * Math.PI * 108; // 678.6
+
+let totalSets, repsPerSet, secsPerSet;
+let currentSet = 0;
+let secondsLeft = 0;
+let repsThisSet = 0;
+let running = false;
+let intervalId = null;
+let repLog = []; // reps completed per set
+let audioCtx = null;
+
+const $ = id => document.getElementById(id);
+
+function getSettings() {
+  totalSets = parseInt($('totalSets').value) || 10;
+  repsPerSet = parseInt($('repsPerSet').value) || 10;
+  secsPerSet = parseInt($('secsPerSet').value) || 60;
+}
+
+function buildDots() {
+  const track = $('setTrack');
+  track.innerHTML = '';
+  for (let i = 0; i < totalSets; i++) {
+    const d = document.createElement('div');
+    d.className = 'set-dot';
+    d.id = `dot-${i}`;
+    track.appendChild(d);
+  }
+}
+
+function updateDots() {
+  for (let i = 0; i < totalSets; i++) {
+    const d = $(`dot-${i}`);
+    if (!d) continue;
+    d.className = 'set-dot' + (i < currentSet - 1 ? ' done' : i === currentSet - 1 ? ' active' : '');
+  }
+}
+
+function updateRing(secs) {
+  const fraction = secs / secsPerSet;
+  const offset = CIRCUMFERENCE * (1 - fraction);
+  const ring = $('ringFill');
+  ring.style.strokeDashoffset = offset;
+  const td = $('timeDisplay');
+  ring.className = 'ring-fill';
+  td.className = 'time-display';
+  if (secs <= 10) { ring.classList.add('danger'); td.classList.add('danger'); }
+  else if (secs <= 20) { ring.classList.add('warn'); td.classList.add('warn'); }
+}
+
+function beep(type = 'start') {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  if (type === 'start') {
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+  } else if (type === 'warn') {
+    osc.frequency.setValueAtTime(660, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+  } else if (type === 'done') {
+    osc.frequency.setValueAtTime(1320, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.15);
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+  }
+}
+
+function flash() {
+  const f = $('flashOverlay');
+  f.classList.add('active');
+  setTimeout(() => f.classList.remove('active'), 200);
+}
+
+function startSet(setNum) {
+  currentSet = setNum;
+  secondsLeft = secsPerSet;
+  repsThisSet = 0;
+  $('repCount').textContent = '0';
+  updateDots();
+  $('setLabel').textContent = `SET ${currentSet} / ${totalSets}`;
+  $('timeDisplay').textContent = secondsLeft;
+  $('repHint').textContent = `${repsPerSet} reps — GO!`;
+  $('statusMsg').textContent = `Set ${currentSet} of ${totalSets} — work!`;
+  $('statusMsg').className = 'status-msg go';
+  updateRing(secondsLeft);
+  beep('start');
+  flash();
+}
+
+function endWorkout() {
+  running = false;
+  clearInterval(intervalId);
+  $('startBtn').textContent = 'START';
+  $('setLabel').textContent = 'Complete!';
+  $('timeDisplay').textContent = '✓';
+  $('timeDisplay').className = 'time-display';
+  $('repHint').textContent = '';
+  $('statusMsg').textContent = '';
+  $('ringFill').style.strokeDashoffset = 0;
+
+  const totalReps = repLog.reduce((a, b) => a + b, 0);
+  $('completeStats').textContent = `${totalSets} sets · ${totalReps} total reps · ${Math.round(totalSets * secsPerSet / 60)} min`;
+  $('completeBanner').classList.add('show');
+  beep('done');
+  flash();
+}
+
+function tick() {
+  secondsLeft--;
+  $('timeDisplay').textContent = secondsLeft;
+  updateRing(secondsLeft);
+  if (secondsLeft === 10) beep('warn');
+
+  if (secondsLeft <= 0) {
+    repLog.push(repsThisSet);
+    if (currentSet >= totalSets) {
+      endWorkout();
+    } else {
+      startSet(currentSet + 1);
+    }
+  }
+}
+
+function startStop() {
+  if (!running) {
+    getSettings();
+    buildDots();
+    $('completeBanner').classList.remove('show');
+    if (currentSet === 0) {
+      // fresh start
+      running = true;
+      $('startBtn').textContent = 'PAUSE';
+      $('settingsRow').style.opacity = '0.4';
+      $('settingsRow').style.pointerEvents = 'none';
+      startSet(1);
+      intervalId = setInterval(tick, 1000);
+    } else {
+      // resume
+      running = true;
+      $('startBtn').textContent = 'PAUSE';
+      intervalId = setInterval(tick, 1000);
+    }
+  } else {
+    running = false;
+    clearInterval(intervalId);
+    $('startBtn').textContent = 'RESUME';
+    $('statusMsg').textContent = 'Paused';
+    $('statusMsg').className = 'status-msg';
+  }
+}
+
+function reset() {
+  running = false;
+  clearInterval(intervalId);
+  currentSet = 0;
+  repLog = [];
+  repsThisSet = 0;
+  getSettings();
+  buildDots();
+  $('repCount').textContent = '0';
+  $('setLabel').textContent = 'Set — / —';
+  $('timeDisplay').textContent = secsPerSet;
+  $('timeDisplay').className = 'time-display';
+  $('repHint').textContent = 'Press Start';
+  $('statusMsg').textContent = 'Configure sets above, then press Start';
+  $('statusMsg').className = 'status-msg';
+  $('startBtn').textContent = 'START';
+  $('ringFill').style.strokeDashoffset = 0;
+  $('completeBanner').classList.remove('show');
+  $('settingsRow').style.opacity = '1';
+  $('settingsRow').style.pointerEvents = 'auto';
+}
+
+$('startBtn').addEventListener('click', startStop);
+$('resetBtn').addEventListener('click', reset);
+$('repPlus').addEventListener('click', () => { repsThisSet++; $('repCount').textContent = repsThisSet; });
+$('repMinus').addEventListener('click', () => { if (repsThisSet > 0) { repsThisSet--; $('repCount').textContent = repsThisSet; } });
+
+// Init
+getSettings();
+buildDots();
+$('timeDisplay').textContent = secsPerSet;
+</script>
+</body>
+</html>
