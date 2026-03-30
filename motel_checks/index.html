@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1a1612">
+  <title>Paihia Star Ops</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #1a1612;
+      --surface:   #231f1a;
+      --raised:    #2d2822;
+      --border:    #3d3830;
+      --muted:     #7a7068;
+      --text:      #f0ebe3;
+      --subtext:   #b8ae9f;
+      --accent:    #e8a84a;
+      --accent-dim:#a06f1f;
+      --green:     #6dbf8a;
+      --red:       #e86060;
+      --blue:      #6aaed6;
+      --radius:    12px;
+      --tab-h:     58px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%; width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      overflow: hidden;
+    }
+
+    /* ── SHELL ── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 18px 20px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+    }
+    .brand span { color: var(--text); font-weight: 400; }
+    .date-display {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── TABS ── */
+    nav {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    nav button {
+      flex: 1;
+      height: var(--tab-h);
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+    }
+    nav button.active {
+      color: var(--accent);
+    }
+    nav button.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 20%; right: 20%;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+    }
+    .tab-icon { display: block; font-size: 18px; margin-bottom: 2px; }
+
+    /* ── CONTENT ── */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-panel { display: none; padding: 16px; }
+    .tab-panel.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── TODAY CARD ── */
+    .today-card {
+      background: var(--raised);
+      border: 1px solid var(--accent-dim);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .today-card .card-title { color: var(--accent); }
+    .today-section { margin-bottom: 12px; }
+    .today-section:last-child { margin-bottom: 0; }
+    .today-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .guest-pill {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+    }
+    .guest-pill:last-child { margin-bottom: 0; }
+    .pill-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+    .dot-arrival { background: var(--green); }
+    .dot-inhouse { background: var(--blue); }
+    .guest-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .guest-meta {
+      font-size: 11px;
+      color: var(--subtext);
+      margin-top: 2px;
+    }
+    .guest-notes {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 4px;
+      font-style: italic;
+    }
+    .today-empty {
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── BOOKING FORM ── */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 12px;
+      color: var(--subtext);
+    }
+    .form-group { margin-bottom: 12px; }
+    label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    input[type="text"], input[type="date"], select, textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+    select option { background: var(--surface); }
+
+    .date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.75; }
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--subtext);
+      padding: 8px;
+      font-size: 11px;
+    }
+    .btn-danger {
+      background: none;
+      border: 1px solid var(--red);
+      color: var(--red);
+      padding: 6px 10px;
+      font-size: 11px;
+      width: auto;
+    }
+
+    /* ── BOOKING LIST ── */
+    .booking-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .booking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .booking-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .booking-dates {
+      font-size: 11px;
+      color: var(--subtext);
+      margin-bottom: 4px;
+    }
+    .booking-room {
+      font-size: 11px;
+      color: var(--blue);
+    }
+    .booking-notes-text {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+      font-style: italic;
+    }
+    .status-badge {
+      font-size: 9px;
+      padding: 3px 7px;
+      border-radius: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-arriving { background: rgba(109,191,138,0.15); color: var(--green); }
+    .badge-inhouse  { background: rgba(106,174,214,0.15); color: var(--blue); }
+    .badge-departed { background: rgba(122,112,104,0.15); color: var(--muted); }
+    .badge-upcoming { background: rgba(232,168,74,0.15);  color: var(--accent); }
+
+    /* ── CHECKLISTS ── */
+    .checklist-section {
+      margin-bottom: 16px;
+    }
+    .checklist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .checklist-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .checklist-progress {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .check-item.done {
+      background: var(--bg);
+      border-color: transparent;
+    }
+    .check-item.done .check-label {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+    .checkbox {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .check-item.done .checkbox {
+      background: var(--green);
+      border-color: var(--green);
+    }
+    .checkbox::after {
+      content: '';
+      display: none;
+      width: 5px; height: 9px;
+      border: 2px solid var(--bg);
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg) translateY(-1px);
+    }
+    .check-item.done .checkbox::after { display: block; }
+    .check-label { font-size: 13px; line-height: 1.3; }
+
+    .reset-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 4px;
+      margin-bottom: 16px;
+    }
+
+    /* ── ADMIN TAB ── */
+    .countdown-card {
+      background: var(--raised);
+      border: 1px solid var(--accent-dim);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .countdown-number {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 48px;
+      color: var(--accent);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .countdown-label { font-size: 12px; color: var(--subtext); }
+    .countdown-label strong {
+      display: block;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .countdown-urgent { color: var(--red) !important; }
+    .countdown-number.urgent { color: var(--red); }
+
+    .provider-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .provider-item.done { background: var(--bg); border-color: transparent; }
+    .provider-item.done .provider-name { color: var(--muted); text-decoration: line-through; }
+    .provider-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      flex: 1;
+    }
+    .provider-type {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    /* ── ACCORDION ── */
+    .accordion-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--surface);
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      gap: 10px;
+    }
+    .accordion-header:active { background: var(--raised); }
+    .accordion-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .accordion-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .accordion-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: rgba(232,168,74,0.12);
+      color: var(--accent);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .accordion-badge.complete {
+      background: rgba(109,191,138,0.15);
+      color: var(--green);
+    }
+    .accordion-chevron {
+      color: var(--muted);
+      font-size: 11px;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .accordion-item.open .accordion-chevron { transform: rotate(180deg); }
+    .accordion-body {
+      display: none;
+      padding: 12px 16px 14px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+    .accordion-item.open .accordion-body { display: block; }
+    .accordion-progress {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .accordion-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .accordion-item.open.all-done .accordion-header { background: rgba(109,191,138,0.07); }
+    .accordion-item.all-done .accordion-progress-fill { background: var(--green); }
+
+    /* ── SYNC STATUS ── */
+    .sync-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--surface);
+      border-radius: 8px;
+      margin-bottom: 14px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .sync-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+    .sync-dot.ok { background: var(--green); }
+    .sync-dot.err { background: var(--red); }
+    .sync-dot.syncing { background: var(--accent); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: flex-end;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      max-height: 85dvh;
+      overflow-y: auto;
+    }
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .modal-actions .btn { flex: 1; }
+
+    /* ── SETTINGS ── */
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-label {
+      font-size: 13px;
+      color: var(--subtext);
+    }
+    .settings-input {
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      width: 200px;
+      outline: none;
+    }
+    .settings-input:focus { border-color: var(--accent); }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--muted);
+      font-size: 12px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="header-row">
+      <div class="brand">STAR<span> OPS</span></div>
+      <div class="date-display" id="headerDate"></div>
+    </div>
+  </header>
+
+  <nav>
+    <button class="active" onclick="switchTab('bookings')" id="tab-bookings">
+      <span class="tab-icon">⚑</span>Bookings
+    </button>
+    <button onclick="switchTab('rooms')" id="tab-rooms">
+      <span class="tab-icon">⊡</span>Rooms
+    </button>
+    <button onclick="switchTab('admin')" id="tab-admin">
+      <span class="tab-icon">◈</span>Admin
+    </button>
+  </nav>
+
+  <main>
+
+    <!-- ══════════════ TAB 1: BOOKINGS ══════════════ -->
+    <div class="tab-panel active" id="panel-bookings">
+
+      <!-- Today Card -->
+      <div class="today-card" id="todayCard">
+        <div class="card-title">Today — <span id="todayDateLabel"></span></div>
+        <div id="todayArrivals" class="today-section"></div>
+        <div id="todayInhouse" class="today-section"></div>
+      </div>
+
+      <!-- Sync bar -->
+      <div class="sync-bar">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncStatus">Not connected to Google Sheets</span>
+        <span style="margin-left:auto; cursor:pointer; color:var(--accent);" onclick="openSettings()">⚙</span>
+      </div>
+
+      <!-- Add Booking -->
+      <div class="card">
+        <div class="card-title">Add Booking Anomaly</div>
+        <div class="form-group">
+          <label>Guest Name</label>
+          <input type="text" id="guestName" placeholder="e.g. Smith">
+        </div>
+        <div class="form-group">
+          <label>Room</label>
+          <select id="guestRoom">
+            <option value="">Select room…</option>
+            <option value="Room 1 – 2BR">Room 1 – 2BR Apartment</option>
+            <option value="Room 2 – Studio">Room 2 – Studio</option>
+            <option value="Room 3 – Studio">Room 3 – Studio</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="date-row">
+            <div>
+              <label>Check-in</label>
+              <input type="date" id="checkIn">
+            </div>
+            <div>
+              <label>Check-out</label>
+              <input type="date" id="checkOut">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Special Requirements</label>
+          <textarea id="guestNotes" placeholder="Dietary needs, late arrival, accessibility, extra beds…"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="addBooking()">Save Anomaly</button>
+      </div>
+
+      <!-- Booking List -->
+      <div class="section-title">All Logged Anomalies</div>
+      <div id="bookingList"></div>
+
+    </div>
+
+    <!-- ══════════════ TAB 2: ROOMS ══════════════ -->
+    <div class="tab-panel" id="panel-rooms">
+      <div id="accordion"></div>
+    </div>
+
+    <!-- ══════════════ TAB 3: ADMIN ══════════════ -->
+    <div class="tab-panel" id="panel-admin">
+
+      <!-- Bill Payment Countdown -->
+      <div class="countdown-card" id="countdownCard">
+        <div class="countdown-number" id="countdownDays">—</div>
+        <div class="countdown-label">
+          <strong>Bill Payment Due</strong>
+          <span id="countdownSubtext">Loading…</span>
+        </div>
+      </div>
+
+      <!-- Providers Checklist -->
+      <div class="section-title">Monthly Providers</div>
+      <div id="providerList"></div>
+      <div class="reset-row">
+        <button class="btn btn-ghost" onclick="resetProviders()">Reset All</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- General Admin Checklist -->
+      <div id="admin-accordion"></div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-title">⚙ Settings</div>
+    <div class="settings-row">
+      <div class="settings-label">Google Sheets Script URL</div>
+    </div>
+    <div style="margin-top:10px; margin-bottom:16px;">
+      <input type="text" class="settings-input" id="sheetsUrl" style="width:100%; font-size:11px;" placeholder="https://script.google.com/macros/s/…/exec">
+    </div>
+    <p style="font-size:11px; color:var(--muted); line-height:1.6; margin-bottom:16px;">
+      Paste your Google Apps Script web app URL here. Booking anomalies will sync automatically when you save them.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-title">Remove Booking?</div>
+    <p style="font-size:13px; color:var(--subtext); margin-bottom:8px;" id="deleteGuestName"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeDelete()">Keep</button>
+      <button class="btn btn-primary" style="background:var(--red)" onclick="confirmDelete()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════
+
+const CHECKLISTS = [
+  {
+    key: 'pulse-am',
+    title: 'Pulse AM Routine',
+    items: [
+      'Check today\'s check-ins and check-outs',
+      'Check upcoming arrivals (next 3 days)',
+      'Note any special requirements for today\'s guests',
+    ]
+  },
+  {
+    key: 'r2',
+    title: 'Room 2 – Studio Flip',
+    items: [
+      'Strip bedding',
+      'Sheets to pick-up bag',
+      'Towels, pillowcases and shower curtain to in-house laundry',
+      'Take mats outside to air — bathroom, kitchen, entrance',
+      'Jif and hot water in sink — wipe: countertops, side tables, dining table, fridge shelves, microwave interior, cupboard shelves',
+      'Bathroom vanity',
+      'Bathroom mirror',
+      'Towel rack',
+      'Boil kettle — spray toilet, pour boiled water, wipe and dry',
+      'Top up soaps, shampoo, conditioner, toilet paper',
+      'Make bed/s',
+      'Dress room — pillowcases, coverlets, towels in rack, dish cloth, tea towel, kitchen hand towel, shower mat',
+      'Hang fresh shower curtain',
+      'Check consumables — teabags, coffee, sugar, biscuits, milk',
+      'Boil kettle — Jif and antiseptic in mop bucket',
+      'Mop floors — flood mop then regular mop bathroom / regular mop kitchen and entry',
+      'Vacuum',
+      'Bring mats back in',
+    ]
+  },
+  {
+    key: 'r3',
+    title: 'Room 3 – Studio Flip',
+    items: [
+      'Strip bedding',
+      'Sheets to pick-up bag',
+      'Towels, pillowcases and shower curtain to in-house laundry',
+      'Take mats outside to air — bathroom, kitchen, entrance',
+      'Jif and hot water in sink — wipe: countertops, side tables, dining table, fridge shelves, microwave interior, cupboard shelves',
+      'Bathroom vanity',
+      'Bathroom mirror',
+      'Towel rack',
+      'Boil kettle — spray toilet, pour boiled water, wipe and dry',
+      'Top up soaps, shampoo, conditioner, toilet paper',
+      'Make bed/s',
+      'Dress room — pillowcases, coverlets, towels in rack, dish cloth, tea towel, kitchen hand towel, shower mat',
+      'Hang fresh shower curtain',
+      'Check consumables — teabags, coffee, sugar, biscuits, milk',
+      'Boil kettle — Jif and antiseptic in mop bucket',
+      'Mop floors — flood mop then regular mop bathroom / regular mop kitchen and entry',
+      'Vacuum',
+      'Bring mats back in',
+    ]
+  },
+  {
+    key: 'r1',
+    title: 'Room 1 – 2BR Apartment Flip',
+    items: [
+      'Strip bedding',
+      'Sheets to pick-up bag',
+      'Towels, pillowcases and shower curtain to in-house laundry',
+      'Take mats outside to air — bathroom, kitchen, entrance',
+      'Jif and hot water in sink — wipe: countertops, side tables, dining table, fridge shelves, microwave interior, cupboard shelves',
+      'Bathroom vanity',
+      'Bathroom mirror',
+      'Shower glass',
+      'Towel rack',
+      'Boil kettle — spray toilet, pour boiled water, wipe and dry',
+      'Top up soaps, shampoo, conditioner, toilet paper',
+      'Make bed/s',
+      'Dress room — pillowcases, coverlets, towels in rack, dish cloth, tea towel, kitchen hand towel, shower mat',
+      'Hang fresh shower curtain',
+      'Check consumables — teabags, coffee, sugar, biscuits, milk',
+      'Boil kettle — Jif and antiseptic in mop bucket',
+      'Mop floors — flood mop then regular mop bathroom / regular mop kitchen and entry',
+      'Vacuum',
+      'Bring mats back in',
+    ]
+  },
+  {
+    key: 'grounds',
+    title: 'Grounds Check',
+    items: [
+      'Clear paths of leaves / debris',
+      'Check carpark area',
+      'Mow and edge lawns',
+      'Water plants if needed',
+      'Empty outdoor bin if needed',
+      'Check letterbox',
+      'Inspect exterior of all units for issues',
+      'Note any maintenance tasks — waterblasting, paint touch-ups, tree pruning, etc.',
+    ]
+  },
+  {
+    key: 'pulse-pm',
+    title: 'Pulse PM Routine',
+    items: [
+      'Review and respond to any unanswered messages',
+      'Confirm breakfast covers for tomorrow',
+      'Set up breakfast trays for morning',
+      'Check upcoming arrivals (next 3 days) — any anomalies to log?',
+    ]
+  },
+];
+
+const PROVIDERS = [
+  { id: 'northland-waste', name: 'Northland Waste',      type: 'Waste / Recycling' },
+  { id: 'powershop',       name: 'Powershop',            type: 'Electricity' },
+  { id: '2degrees',        name: '2degrees Broadband',   type: 'Internet' },
+  { id: 'water',           name: 'Water / Council Rates',type: 'Council' },
+  { id: 'apparel-master',  name: 'Apparel Master',       type: 'Linen / Apparel' },
+  { id: 'insurance',       name: 'Insurance',            type: 'Business' },
+];
+
+const ADMIN_CHECKLIST = {
+  key: 'admin',
+  title: 'Monthly Admin',
+  items: [
+    'Review month\'s occupancy rate',
+    'Check Booking.com review responses',
+    'Update pricing for next month if needed',
+    'Confirm upcoming bookings are accurate',
+    'Check any outstanding issues with units',
+  ]
+};
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem('starops') || '{}'); } catch { return {}; }
+}
+function saveState(s) {
+  localStorage.setItem('starops', JSON.stringify(s));
+}
+
+let state = loadState();
+if (!state.bookings)   state.bookings = [];
+if (!state.checks)     state.checks = {};
+if (!state.providers)  state.providers = {};
+if (!state.sheetsUrl)  state.sheetsUrl = '';
+if (!state.lastReset)  state.lastReset = '';
+
+// Auto-reset checklists daily
+const todayKey = new Date().toISOString().slice(0, 10);
+if (state.lastReset !== todayKey) {
+  state.checks = {};
+  state.providers = {};
+  state.lastReset = todayKey;
+  saveState(state);
+}
+
+let deleteTargetId = null;
+
+// ════════════════════════════════════════════
+// DATE HELPERS
+// ════════════════════════════════════════════
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${parseInt(day)} ${months[parseInt(m)-1]}`;
+}
+
+function updateHeaderDate() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('headerDate').textContent =
+    `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]}`;
+  document.getElementById('todayDateLabel').textContent =
+    `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]}`;
+}
+
+function getBookingStatus(b) {
+  const today = todayStr();
+  if (b.checkIn === today) return 'arriving';
+  if (b.checkOut === today) return 'departing';
+  if (b.checkIn < today && b.checkOut > today) return 'inhouse';
+  if (b.checkOut < today) return 'departed';
+  return 'upcoming';
+}
+
+// ════════════════════════════════════════════
+// TODAY CARD
+// ════════════════════════════════════════════
+
+function renderTodayCard() {
+  const today = todayStr();
+  const arrivals  = state.bookings.filter(b => b.checkIn === today);
+  const inhouse   = state.bookings.filter(b => b.checkIn < today && b.checkOut > today);
+  const departing = state.bookings.filter(b => b.checkOut === today);
+
+  const arrivalsEl = document.getElementById('todayArrivals');
+  const inhouseEl  = document.getElementById('todayInhouse');
+
+  // Arrivals + departing today
+  const arrArr = [...arrivals, ...departing.filter(b => b.checkIn !== today)];
+  if (arrArr.length) {
+    let html = `<div class="today-label">Arriving / Departing today</div>`;
+    arrArr.forEach(b => {
+      const isDepart = b.checkOut === today && b.checkIn !== today;
+      html += `<div class="guest-pill">
+        <div class="pill-dot dot-arrival"></div>
+        <div>
+          <div class="guest-name">${b.name} <span style="font-size:10px;color:var(--muted);font-weight:400">${b.room || ''}</span></div>
+          <div class="guest-meta">${isDepart ? '↑ Checking out' : '↓ Arriving'} · ${formatDate(b.checkIn)} → ${formatDate(b.checkOut)}</div>
+          ${b.notes ? `<div class="guest-notes">⚑ ${b.notes}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    arrivalsEl.innerHTML = html;
+  } else {
+    arrivalsEl.innerHTML = `<div class="today-empty">No arrivals or departures today</div>`;
+  }
+
+  // In-house
+  if (inhouse.length) {
+    let html = `<div class="today-label" style="margin-top:12px">Currently in-house</div>`;
+    inhouse.forEach(b => {
+      html += `<div class="guest-pill">
+        <div class="pill-dot dot-inhouse"></div>
+        <div>
+          <div class="guest-name">${b.name} <span style="font-size:10px;color:var(--muted);font-weight:400">${b.room || ''}</span></div>
+          <div class="guest-meta">Departs ${formatDate(b.checkOut)}</div>
+          ${b.notes ? `<div class="guest-notes">⚑ ${b.notes}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    inhouseEl.innerHTML = html;
+  } else {
+    inhouseEl.innerHTML = '';
+  }
+}
+
+// ════════════════════════════════════════════
+// BOOKING CRUD
+// ════════════════════════════════════════════
+
+function addBooking() {
+  const name    = document.getElementById('guestName').value.trim();
+  const room    = document.getElementById('guestRoom').value;
+  const checkIn = document.getElementById('checkIn').value;
+  const checkOut= document.getElementById('checkOut').value;
+  const notes   = document.getElementById('guestNotes').value.trim();
+
+  if (!name || !checkIn || !checkOut) {
+    alert('Please fill in Guest Name, Check-in and Check-out dates.');
+    return;
+  }
+  if (checkOut <= checkIn) {
+    alert('Check-out must be after check-in.');
+    return;
+  }
+
+  const booking = {
+    id: Date.now().toString(),
+    name, room, checkIn, checkOut, notes,
+    created: new Date().toISOString()
+  };
+
+  state.bookings.push(booking);
+  saveState(state);
+  renderBookings();
+  renderTodayCard();
+  syncToSheets(booking);
+
+  // Clear form
+  document.getElementById('guestName').value = '';
+  document.getElementById('guestRoom').value = '';
+  document.getElementById('checkIn').value = '';
+  document.getElementById('checkOut').value = '';
+  document.getElementById('guestNotes').value = '';
+}
+
+function renderBookings() {
+  const el = document.getElementById('bookingList');
+  if (!state.bookings.length) {
+    el.innerHTML = '<div class="empty">No anomalies logged yet</div>';
+    return;
+  }
+
+  const sorted = [...state.bookings].sort((a, b) => a.checkIn.localeCompare(b.checkIn));
+
+  const statusLabel = { arriving:'Arriving', inhouse:'In-house', departing:'Departing', departed:'Departed', upcoming:'Upcoming' };
+  const statusClass = { arriving:'badge-arriving', inhouse:'badge-inhouse', departing:'badge-arriving', departed:'badge-departed', upcoming:'badge-upcoming' };
+
+  el.innerHTML = sorted.map(b => {
+    const st = getBookingStatus(b);
+    return `<div class="booking-item">
+      <div class="booking-header">
+        <div class="booking-name">${b.name}</div>
+        <span class="status-badge ${statusClass[st]}">${statusLabel[st]}</span>
+      </div>
+      <div class="booking-dates">${formatDate(b.checkIn)} → ${formatDate(b.checkOut)}</div>
+      ${b.room ? `<div class="booking-room">${b.room}</div>` : ''}
+      ${b.notes ? `<div class="booking-notes-text">⚑ ${b.notes}</div>` : ''}
+      <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+        <button class="btn btn-danger" onclick="openDelete('${b.id}','${b.name.replace(/'/g,"\\'")}')">Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDelete(id, name) {
+  deleteTargetId = id;
+  document.getElementById('deleteGuestName').textContent = name;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDelete() {
+  deleteTargetId = null;
+  document.getElementById('deleteModal').classList.remove('open');
+}
+function confirmDelete() {
+  state.bookings = state.bookings.filter(b => b.id !== deleteTargetId);
+  saveState(state);
+  renderBookings();
+  renderTodayCard();
+  closeDelete();
+}
+
+// ════════════════════════════════════════════
+// ACCORDION + CHECKLISTS
+// ════════════════════════════════════════════
+
+function buildAccordion() {
+  const el = document.getElementById('accordion');
+  el.innerHTML = CHECKLISTS.map(cl => `
+    <div class="accordion-item" id="acc-${cl.key}">
+      <div class="accordion-header" onclick="toggleAccordion('${cl.key}')">
+        <div class="accordion-left">
+          <div class="accordion-title">${cl.title}</div>
+        </div>
+        <span class="accordion-badge" id="badge-${cl.key}">0/${cl.items.length}</span>
+        <span class="accordion-chevron">▼</span>
+      </div>
+      <div class="accordion-body">
+        <div class="accordion-progress">
+          <div class="accordion-progress-fill" id="bar-${cl.key}"></div>
+        </div>
+        <div id="list-${cl.key}"></div>
+        <div class="reset-row">
+          <button class="btn btn-ghost" onclick="resetList('${cl.key}')">Reset</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  CHECKLISTS.forEach(cl => renderChecklist(cl.key));
+}
+
+function toggleAccordion(key) {
+  const item = document.getElementById(`acc-${key}`);
+  item.classList.toggle('open');
+}
+
+function renderChecklist(key) {
+  const cl    = CHECKLISTS.find(c => c.key === key);
+  const items = cl.items;
+  const el    = document.getElementById(`list-${key}`);
+  const badge = document.getElementById(`badge-${key}`);
+  const bar   = document.getElementById(`bar-${key}`);
+  const accItem = document.getElementById(`acc-${key}`);
+  const done  = state.checks[key] || [];
+
+  const count = done.length;
+  const total = items.length;
+  const complete = count === total;
+
+  if (badge) {
+    badge.textContent = `${count}/${total}`;
+    badge.className = 'accordion-badge' + (complete ? ' complete' : '');
+  }
+  if (bar) bar.style.width = `${(count/total)*100}%`;
+  if (accItem) {
+    accItem.classList.toggle('all-done', complete);
+  }
+
+  if (!el) return;
+  el.innerHTML = items.map((item, i) => {
+    const checked = done.includes(i);
+    return `<div class="check-item ${checked?'done':''}" onclick="toggleCheck('${key}',${i})">
+      <div class="checkbox"></div>
+      <div class="check-label">${item}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCheck(key, index) {
+  if (!state.checks[key]) state.checks[key] = [];
+  const arr = state.checks[key];
+  const pos = arr.indexOf(index);
+  if (pos === -1) arr.push(index); else arr.splice(pos, 1);
+  saveState(state);
+  renderChecklist(key);
+}
+
+function resetList(key) {
+  state.checks[key] = [];
+  saveState(state);
+  renderChecklist(key);
+}
+
+function renderAllChecklists() {
+  buildAccordion();
+}
+
+// ════════════════════════════════════════════
+// PROVIDERS
+// ════════════════════════════════════════════
+
+function renderProviders() {
+  const el = document.getElementById('providerList');
+  el.innerHTML = PROVIDERS.map(p => {
+    const done = !!state.providers[p.id];
+    return `<div class="provider-item ${done?'done':''}" onclick="toggleProvider('${p.id}')">
+      <div class="checkbox"></div>
+      <div>
+        <div class="provider-name">${p.name}</div>
+        <div class="provider-type">${p.type}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildAdminAccordion() {
+  const el = document.getElementById('admin-accordion');
+  const cl = ADMIN_CHECKLIST;
+  el.innerHTML = `
+    <div class="accordion-item" id="acc-${cl.key}">
+      <div class="accordion-header" onclick="toggleAccordion('${cl.key}')">
+        <div class="accordion-left">
+          <div class="accordion-title">${cl.title}</div>
+        </div>
+        <span class="accordion-badge" id="badge-${cl.key}">0/${cl.items.length}</span>
+        <span class="accordion-chevron">▼</span>
+      </div>
+      <div class="accordion-body">
+        <div class="accordion-progress">
+          <div class="accordion-progress-fill" id="bar-${cl.key}"></div>
+        </div>
+        <div id="list-${cl.key}"></div>
+        <div class="reset-row">
+          <button class="btn btn-ghost" onclick="resetAdminChecklist()">Reset</button>
+        </div>
+      </div>
+    </div>`;
+  renderAdminChecklist();
+}
+
+function renderAdminChecklist() {
+  const cl    = ADMIN_CHECKLIST;
+  const key   = cl.key;
+  const items = cl.items;
+  const el    = document.getElementById(`list-${key}`);
+  const badge = document.getElementById(`badge-${key}`);
+  const bar   = document.getElementById(`bar-${key}`);
+  const accItem = document.getElementById(`acc-${key}`);
+  const done  = state.checks[key] || [];
+  const count = done.length;
+  const total = items.length;
+  const complete = count === total;
+
+  if (badge) { badge.textContent = `${count}/${total}`; badge.className = 'accordion-badge' + (complete ? ' complete' : ''); }
+  if (bar)   bar.style.width = `${(count/total)*100}%`;
+  if (accItem) accItem.classList.toggle('all-done', complete);
+  if (!el) return;
+
+  el.innerHTML = items.map((item, i) => {
+    const checked = done.includes(i);
+    return `<div class="check-item ${checked?'done':''}" onclick="toggleAdminCheck(${i})">
+      <div class="checkbox"></div>
+      <div class="check-label">${item}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleAdminCheck(index) {
+  const key = ADMIN_CHECKLIST.key;
+  if (!state.checks[key]) state.checks[key] = [];
+  const arr = state.checks[key];
+  const pos = arr.indexOf(index);
+  if (pos === -1) arr.push(index); else arr.splice(pos, 1);
+  saveState(state);
+  renderAdminChecklist();
+}
+
+function resetAdminChecklist() {
+  state.checks[ADMIN_CHECKLIST.key] = [];
+  saveState(state);
+  renderAdminChecklist();
+}
+
+function toggleProvider(id) {
+  state.providers[id] = !state.providers[id];
+  saveState(state);
+  renderProviders();
+}
+
+function resetProviders() {
+  state.providers = {};
+  saveState(state);
+  renderProviders();
+}
+
+// ════════════════════════════════════════════
+// COUNTDOWN
+// ════════════════════════════════════════════
+
+function renderCountdown() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  let target = new Date(year, month, 20);
+  if (now.getDate() > 20) target = new Date(year, month + 1, 20);
+
+  const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+  const daysEl = document.getElementById('countdownDays');
+  const subEl  = document.getElementById('countdownSubtext');
+  const card   = document.getElementById('countdownCard');
+
+  daysEl.textContent = diff <= 0 ? '!' : diff;
+  subEl.textContent  = diff <= 0
+    ? 'Bills due today!'
+    : `days until the 20th — check all providers below`;
+
+  if (diff <= 3) {
+    daysEl.classList.add('urgent');
+    card.style.borderColor = 'var(--red)';
+  } else {
+    daysEl.classList.remove('urgent');
+    card.style.borderColor = 'var(--accent-dim)';
+  }
+}
+
+// ════════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ════════════════════════════════════════════
+
+async function syncToSheets(booking) {
+  const url = state.sheetsUrl;
+  if (!url) return;
+
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncStatus');
+  dot.className = 'sync-dot syncing';
+  txt.textContent = 'Syncing…';
+
+  try {
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'addBooking', booking })
+    });
+    dot.className = 'sync-dot ok';
+    txt.textContent = `Synced to Sheets · ${new Date().toLocaleTimeString('en-NZ', {hour:'2-digit',minute:'2-digit'})}`;
+  } catch (e) {
+    dot.className = 'sync-dot err';
+    txt.textContent = 'Sync failed – saved locally';
+  }
+}
+
+function updateSyncStatus() {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncStatus');
+  if (state.sheetsUrl) {
+    dot.className = 'sync-dot ok';
+    txt.textContent = 'Google Sheets connected';
+  } else {
+    dot.className = 'sync-dot';
+    txt.textContent = 'Not connected to Google Sheets — tap ⚙ to configure';
+  }
+}
+
+// ════════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════════
+
+function openSettings() {
+  document.getElementById('sheetsUrl').value = state.sheetsUrl || '';
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+}
+function saveSettings() {
+  state.sheetsUrl = document.getElementById('sheetsUrl').value.trim();
+  saveState(state);
+  updateSyncStatus();
+  closeSettings();
+}
+
+// ════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+
+function init() {
+  updateHeaderDate();
+  renderTodayCard();
+  renderBookings();
+  renderAllChecklists();
+  renderProviders();
+  buildAdminAccordion();
+  renderCountdown();
+  updateSyncStatus();
+
+  // Set today as default check-in date
+  document.getElementById('checkIn').value = todayStr();
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => {
+    if (e.target === el) {
+      el.classList.remove('open');
+      deleteTargetId = null;
+    }
+  });
+});
+
+init();
+</script>
+</body>
+</html>
