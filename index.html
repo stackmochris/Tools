@@ -42,6 +42,8 @@ body{font-family:'Barlow',sans-serif;color:var(--text);font-size:14px;line-heigh
 .day-tab[data-day="2"].active{color:var(--d2);border-color:rgba(45,122,79,0.35);background:rgba(45,122,79,0.06)}
 .day-tab[data-day="3"].active{color:var(--d3);border-color:rgba(192,57,43,0.35);background:rgba(192,57,43,0.06)}
 .day-tab[data-day="4"].active{color:var(--d4);border-color:rgba(107,63,160,0.35);background:rgba(107,63,160,0.06)}
+.day-tab[data-day="5"].active{color:var(--muted);border-color:var(--border2);background:var(--bg2)}
+.day-title.dopt{color:var(--muted)}
 .done-tick{font-size:10px;margin-left:2px}
 
 .main{max-width:680px;margin:0 auto;padding:16px 12px 100px}
@@ -285,6 +287,15 @@ const WEEKS=[
       {name:'DB Curls',target:'2–3×10–15',sets:3,prev:'12.5×20'},
       {name:'Rear Delt Fly',target:'10×10',sets:0,gvt:true,prev:'6.8×20 (W4)'},
     ]},
+    {id:'d5',color:'dopt',icon:'⚪',title:'OPT DAY',sub:'Optional — Low Systemic Stress',
+     note:'Only if you have energy and time. Low load, no compounds, no grinders. Pull-up path maintenance.',exercises:[
+      {name:'Lat Pulldown (Controlled)',target:'3×8–12',sets:3,prev:'—'},
+      {name:'Cable Chest Fly',target:'2×12–15',sets:2,prev:'—'},
+      {name:'Cable Lateral Raise',target:'3×15–20',sets:3,prev:'—'},
+      {name:'Face Pull',target:'2×15–20',sets:2,prev:'—'},
+      {name:'Cable Curl',target:'2×12–15',sets:2,prev:'—'},
+      {name:'Rope Pushdown',target:'2×12–20',sets:2,prev:'—'},
+    ]},
   ]},
 
   // ── WEEK 6 ──────────────────────────────────────────────
@@ -320,6 +331,15 @@ const WEEKS=[
       {name:'Single Arm Lat Row',target:'3×8–12',sets:3,prev:'45×8'},
       {name:'Incline DB Press (Light)',target:'2×8–12',sets:2,prev:'30×12'},
       {name:'DB Curls',target:'2–3×10–15',sets:3,prev:'12.5×20'},
+    ]},
+    {id:'d5',color:'dopt',icon:'⚪',title:'OPT DAY',sub:'Optional — Low Systemic Stress',
+     note:'Only if you have energy and time. Low load, no compounds, no grinders. Pull-up path maintenance.',exercises:[
+      {name:'Lat Pulldown (Controlled)',target:'3×8–12',sets:3,prev:'—'},
+      {name:'Cable Chest Fly',target:'2×12–15',sets:2,prev:'—'},
+      {name:'Cable Lateral Raise',target:'3×15–20',sets:3,prev:'—'},
+      {name:'Face Pull',target:'2×15–20',sets:2,prev:'—'},
+      {name:'Cable Curl',target:'2×12–15',sets:2,prev:'—'},
+      {name:'Rope Pushdown',target:'2×12–20',sets:2,prev:'—'},
     ]},
   ]},
 
@@ -361,6 +381,15 @@ const WEEKS=[
       {name:'DB Curls',target:'2–3×10–15',sets:3,prev:'12.5×20'},
       {name:'Tricep Pushdown',target:'10×10',sets:0,gvt:true,prev:'20.4×25 (W5 standard)'},
     ]},
+    {id:'d5',color:'dopt',icon:'⚪',title:'OPT DAY',sub:'Optional — Low Systemic Stress',
+     note:'Only if you have energy and time. Low load, no compounds, no grinders. Pull-up path maintenance.',exercises:[
+      {name:'Lat Pulldown (Controlled)',target:'3×8–12',sets:3,prev:'—'},
+      {name:'Cable Chest Fly',target:'2×12–15',sets:2,prev:'—'},
+      {name:'Cable Lateral Raise',target:'3×15–20',sets:3,prev:'—'},
+      {name:'Face Pull',target:'2×15–20',sets:2,prev:'—'},
+      {name:'Cable Curl',target:'2×12–15',sets:2,prev:'—'},
+      {name:'Rope Pushdown',target:'2×12–20',sets:2,prev:'—'},
+    ]},
   ]},
 
   // ── WEEK 8 ──────────────────────────────────────────────
@@ -397,6 +426,15 @@ const WEEKS=[
       {name:'Single Arm Lat Row',target:'3×8–12',sets:3,prev:'45×8'},
       {name:'Incline DB Press (Light)',target:'2×8–12',sets:2,prev:'W7 result'},
       {name:'DB Curls',target:'2–3×10–15',sets:3,prev:'12.5×20'},
+    ]},
+    {id:'d5',color:'dopt',icon:'⚪',title:'OPT DAY',sub:'Optional — Low Systemic Stress',
+     note:'Only if you have energy and time. Low load, no compounds, no grinders. End of Phase 1 — keep it easy.',exercises:[
+      {name:'Lat Pulldown (Controlled)',target:'3×8–12',sets:3,prev:'—'},
+      {name:'Cable Chest Fly',target:'2×12–15',sets:2,prev:'—'},
+      {name:'Cable Lateral Raise',target:'3×15–20',sets:3,prev:'—'},
+      {name:'Face Pull',target:'2×15–20',sets:2,prev:'—'},
+      {name:'Cable Curl',target:'2×12–15',sets:2,prev:'—'},
+      {name:'Rope Pushdown',target:'2×12–20',sets:2,prev:'—'},
     ]},
   ]},
 ];
@@ -489,7 +527,7 @@ function buildNav(){
       wk.days.forEach(dy=>{
         const dt=document.createElement('div');
         dt.className='day-tab'+(dy.id===curDay?' active':'');
-        dt.dataset.day=dy.id.replace('d','');
+        dt.dataset.day = dy.id.replace('d','').replace('opt','5');
         const done=getDayDone(wk.id,dy.id);
         dt.innerHTML=dy.icon+' '+dy.title+(done?'<span class="done-tick">✅</span>':'');
         dt.onclick=()=>{curDay=dy.id;buildNav();renderDay();};
