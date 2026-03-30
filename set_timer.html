@@ -13,11 +13,14 @@
     --border: #2a2a2a;
     --accent: #e8ff47;
     --accent-dim: #b8cc30;
-    --text: #f0f0f0;
-    --muted: #666;
+    --text: #ffffff;
+    --muted: #aaaaaa;
     --danger: #ff4747;
     --warn: #ff9f47;
     --go: #47ff8a;
+    --ring-green: #47ff8a;
+    --ring-orange: #ff9f47;
+    --ring-red: #ff4747;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -60,18 +63,19 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 28px;
+    gap: 24px;
     position: relative;
     z-index: 1;
   }
 
+  /* HEADER */
   .header {
     text-align: center;
     letter-spacing: 0.15em;
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--text);
   }
 
   /* SET INDICATORS */
@@ -114,13 +118,13 @@
   .ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
   .ring-fill {
     fill: none;
-    stroke: var(--accent);
+    stroke: var(--ring-green);
     stroke-width: 6;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.5s linear, stroke 0.3s;
   }
-  .ring-fill.warn { stroke: var(--warn); }
-  .ring-fill.danger { stroke: var(--danger); }
+  .ring-fill.phase-orange { stroke: var(--ring-orange); }
+  .ring-fill.phase-red    { stroke: var(--ring-red); }
 
   .clock-inner {
     text-align: center;
@@ -129,8 +133,8 @@
 
   .set-label {
     font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--muted);
@@ -145,60 +149,16 @@
     color: var(--text);
     transition: color 0.3s;
   }
-  .time-display.warn { color: var(--warn); }
-  .time-display.danger { color: var(--danger); }
+  .time-display.phase-orange { color: var(--ring-orange); }
+  .time-display.phase-red    { color: var(--ring-red); }
+  .time-display.countdown    { color: var(--accent); font-size: 96px; }
 
   .rep-hint {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--muted);
     margin-top: 6px;
     letter-spacing: 0.08em;
   }
-
-  /* REP COUNTER */
-  .rep-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px 24px;
-    width: 100%;
-  }
-  .rep-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: var(--muted);
-    flex: 1;
-  }
-  .rep-count {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 40px;
-    color: var(--accent);
-    line-height: 1;
-    min-width: 48px;
-    text-align: center;
-  }
-  .rep-btns { display: flex; gap: 6px; }
-  .rep-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    line-height: 1;
-  }
-  .rep-btn:hover { background: var(--border); border-color: #444; }
-  .rep-btn:active { transform: scale(0.93); }
 
   /* CONTROLS */
   .controls { display: flex; gap: 10px; width: 100%; }
@@ -232,7 +192,7 @@
 
   /* STATUS MESSAGE */
   .status-msg {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--muted);
     text-align: center;
     letter-spacing: 0.05em;
@@ -258,10 +218,11 @@
     gap: 6px;
   }
   .setting-block label {
-    font-size: 10px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    color: var(--muted);
+    color: var(--text);
+    font-weight: 600;
   }
   .setting-block input {
     background: transparent;
@@ -306,7 +267,7 @@
 <div class="container">
   <div class="header">Interval Workout Timer</div>
 
-  <!-- Settings (shown before start) -->
+  <!-- Settings -->
   <div class="settings-row" id="settingsRow">
     <div class="setting-block">
       <label>Sets</label>
@@ -339,16 +300,6 @@
     </div>
   </div>
 
-  <!-- Rep counter -->
-  <div class="rep-row">
-    <div class="rep-label">Reps<br>this set</div>
-    <div class="rep-count" id="repCount">0</div>
-    <div class="rep-btns">
-      <button class="rep-btn" id="repMinus">−</button>
-      <button class="rep-btn" id="repPlus">+</button>
-    </div>
-  </div>
-
   <!-- Controls -->
   <div class="controls">
     <button class="btn btn-start" id="startBtn">START</button>
@@ -365,25 +316,42 @@
 </div>
 
 <script>
-const CIRCUMFERENCE = 2 * Math.PI * 108; // 678.6
+const CIRCUMFERENCE = 2 * Math.PI * 108;
 
 let totalSets, repsPerSet, secsPerSet;
 let currentSet = 0;
 let secondsLeft = 0;
-let repsThisSet = 0;
 let running = false;
 let intervalId = null;
-let repLog = []; // reps completed per set
+let repLog = [];
 let audioCtx = null;
+let wakeLock = null;
+let countingDown = false;
+let cdIntervalId = null;
 
 const $ = id => document.getElementById(id);
 
+// ── Wake Lock — keep screen on ───────────────────────────────
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+  }
+}
+async function releaseWakeLock() {
+  if (wakeLock) { try { await wakeLock.release(); } catch(e) {} wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && running) requestWakeLock();
+});
+
+// ── Settings ─────────────────────────────────────────────────
 function getSettings() {
-  totalSets = parseInt($('totalSets').value) || 10;
+  totalSets  = parseInt($('totalSets').value)  || 10;
   repsPerSet = parseInt($('repsPerSet').value) || 10;
   secsPerSet = parseInt($('secsPerSet').value) || 60;
 }
 
+// ── Dots ─────────────────────────────────────────────────────
 function buildDots() {
   const track = $('setTrack');
   track.innerHTML = '';
@@ -403,41 +371,70 @@ function updateDots() {
   }
 }
 
+// ── Ring colour phases ───────────────────────────────────────
+// Green: first 30s elapsed (secs remaining > secsPerSet-30)
+// Orange: 30-45s elapsed
+// Red: 45s+ elapsed
 function updateRing(secs) {
+  const elapsed = secsPerSet - secs;
   const fraction = secs / secsPerSet;
   const offset = CIRCUMFERENCE * (1 - fraction);
   const ring = $('ringFill');
+  const td   = $('timeDisplay');
+
   ring.style.strokeDashoffset = offset;
-  const td = $('timeDisplay');
   ring.className = 'ring-fill';
-  td.className = 'time-display';
-  if (secs <= 10) { ring.classList.add('danger'); td.classList.add('danger'); }
-  else if (secs <= 20) { ring.classList.add('warn'); td.classList.add('warn'); }
+  td.className   = 'time-display';
+
+  if (elapsed >= 45) {
+    ring.classList.add('phase-red');
+    td.classList.add('phase-red');
+  } else if (elapsed >= 30) {
+    ring.classList.add('phase-orange');
+    td.classList.add('phase-orange');
+  }
+  // else: green (default stroke colour, no extra class)
 }
 
-function beep(type = 'start') {
+// ── Audio ────────────────────────────────────────────────────
+function beep(type) {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = audioCtx.createOscillator();
+  const osc  = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.connect(gain); gain.connect(audioCtx.destination);
-  if (type === 'start') {
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.35);
-  } else if (type === 'warn') {
-    osc.frequency.setValueAtTime(660, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-  } else if (type === 'done') {
-    osc.frequency.setValueAtTime(1320, audioCtx.currentTime);
-    osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.15);
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+
+  switch(type) {
+    case 'start':
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+      break;
+
+    case 'tick':
+      // Short click for 56/57/58/59s tones
+      osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.07);
+      break;
+
+    case 'countdown':
+      osc.frequency.setValueAtTime(660, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+      break;
+
+    case 'done':
+      osc.frequency.setValueAtTime(1320, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.15);
+      osc.frequency.setValueAtTime(880,  audioCtx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+      break;
   }
 }
 
@@ -447,17 +444,45 @@ function flash() {
   setTimeout(() => f.classList.remove('active'), 200);
 }
 
+// ── 5-second pre-start countdown ────────────────────────────
+function runCountdown(callback) {
+  countingDown = true;
+  let count = 5;
+
+  $('setLabel').textContent   = 'GET READY';
+  $('timeDisplay').className  = 'time-display countdown';
+  $('timeDisplay').textContent = count;
+  $('repHint').textContent    = 'Starting soon…';
+  $('statusMsg').textContent  = '';
+  $('statusMsg').className    = 'status-msg';
+  $('ringFill').className     = 'ring-fill';
+  $('ringFill').style.strokeDashoffset = 0;
+  beep('countdown');
+
+  cdIntervalId = setInterval(() => {
+    count--;
+    if (count > 0) {
+      $('timeDisplay').textContent = count;
+      beep('countdown');
+    } else {
+      clearInterval(cdIntervalId);
+      countingDown = false;
+      callback();
+    }
+  }, 1000);
+}
+
+// ── Set logic ────────────────────────────────────────────────
 function startSet(setNum) {
-  currentSet = setNum;
+  currentSet  = setNum;
   secondsLeft = secsPerSet;
-  repsThisSet = 0;
-  $('repCount').textContent = '0';
   updateDots();
-  $('setLabel').textContent = `SET ${currentSet} / ${totalSets}`;
+  $('setLabel').textContent   = `SET ${currentSet} / ${totalSets}`;
   $('timeDisplay').textContent = secondsLeft;
-  $('repHint').textContent = `${repsPerSet} reps — GO!`;
-  $('statusMsg').textContent = `Set ${currentSet} of ${totalSets} — work!`;
-  $('statusMsg').className = 'status-msg go';
+  $('timeDisplay').className  = 'time-display';
+  $('repHint').textContent    = `${repsPerSet} reps — GO!`;
+  $('statusMsg').textContent  = `Set ${currentSet} of ${totalSets} — work!`;
+  $('statusMsg').className    = 'status-msg go';
   updateRing(secondsLeft);
   beep('start');
   flash();
@@ -466,16 +491,18 @@ function startSet(setNum) {
 function endWorkout() {
   running = false;
   clearInterval(intervalId);
-  $('startBtn').textContent = 'START';
-  $('setLabel').textContent = 'Complete!';
+  releaseWakeLock();
+  $('startBtn').textContent    = 'START';
+  $('setLabel').textContent    = 'Complete!';
   $('timeDisplay').textContent = '✓';
-  $('timeDisplay').className = 'time-display';
-  $('repHint').textContent = '';
-  $('statusMsg').textContent = '';
+  $('timeDisplay').className   = 'time-display';
+  $('repHint').textContent     = '';
+  $('statusMsg').textContent   = '';
   $('ringFill').style.strokeDashoffset = 0;
+  $('ringFill').className = 'ring-fill';
 
-  const totalReps = repLog.reduce((a, b) => a + b, 0);
-  $('completeStats').textContent = `${totalSets} sets · ${totalReps} total reps · ${Math.round(totalSets * secsPerSet / 60)} min`;
+  $('completeStats').textContent =
+    `${totalSets} sets · ${Math.round(totalSets * secsPerSet / 60)} min`;
   $('completeBanner').classList.add('show');
   beep('done');
   flash();
@@ -485,10 +512,12 @@ function tick() {
   secondsLeft--;
   $('timeDisplay').textContent = secondsLeft;
   updateRing(secondsLeft);
-  if (secondsLeft === 10) beep('warn');
+
+  // Tones at 56, 57, 58, 59 seconds (i.e. when 4, 3, 2, 1 seconds remain)
+  if (secondsLeft >= 1 && secondsLeft <= 4) beep('tick');
 
   if (secondsLeft <= 0) {
-    repLog.push(repsThisSet);
+    repLog.push(0);
     if (currentSet >= totalSets) {
       endWorkout();
     } else {
@@ -497,60 +526,69 @@ function tick() {
   }
 }
 
+// ── Start / Pause / Resume ───────────────────────────────────
 function startStop() {
   if (!running) {
     getSettings();
     buildDots();
     $('completeBanner').classList.remove('show');
+    $('settingsRow').style.opacity      = '0.4';
+    $('settingsRow').style.pointerEvents = 'none';
+    running = true;
+    $('startBtn').textContent = 'PAUSE';
+    requestWakeLock();
+
     if (currentSet === 0) {
-      // fresh start
-      running = true;
-      $('startBtn').textContent = 'PAUSE';
-      $('settingsRow').style.opacity = '0.4';
-      $('settingsRow').style.pointerEvents = 'none';
-      startSet(1);
-      intervalId = setInterval(tick, 1000);
+      // Fresh start with 5s countdown
+      runCountdown(() => {
+        startSet(1);
+        intervalId = setInterval(tick, 1000);
+      });
     } else {
-      // resume
-      running = true;
-      $('startBtn').textContent = 'PAUSE';
+      // Resume
       intervalId = setInterval(tick, 1000);
     }
   } else {
+    // Pause — but not during countdown
+    if (countingDown) {
+      clearInterval(cdIntervalId);
+      countingDown = false;
+    }
     running = false;
     clearInterval(intervalId);
-    $('startBtn').textContent = 'RESUME';
+    releaseWakeLock();
+    $('startBtn').textContent  = 'RESUME';
     $('statusMsg').textContent = 'Paused';
-    $('statusMsg').className = 'status-msg';
+    $('statusMsg').className   = 'status-msg';
   }
 }
 
 function reset() {
-  running = false;
+  running      = false;
+  countingDown = false;
   clearInterval(intervalId);
+  clearInterval(cdIntervalId);
+  releaseWakeLock();
   currentSet = 0;
-  repLog = [];
-  repsThisSet = 0;
+  repLog     = [];
   getSettings();
   buildDots();
-  $('repCount').textContent = '0';
-  $('setLabel').textContent = 'Set — / —';
+  $('setLabel').textContent    = 'Set — / —';
   $('timeDisplay').textContent = secsPerSet;
-  $('timeDisplay').className = 'time-display';
-  $('repHint').textContent = 'Press Start';
-  $('statusMsg').textContent = 'Configure sets above, then press Start';
-  $('statusMsg').className = 'status-msg';
-  $('startBtn').textContent = 'START';
+  $('timeDisplay').className   = 'time-display';
+  $('repHint').textContent     = 'Press Start';
+  $('statusMsg').textContent   = 'Configure sets above, then press Start';
+  $('statusMsg').className     = 'status-msg';
+  $('startBtn').textContent    = 'START';
   $('ringFill').style.strokeDashoffset = 0;
+  $('ringFill').className      = 'ring-fill';
   $('completeBanner').classList.remove('show');
-  $('settingsRow').style.opacity = '1';
+  $('settingsRow').style.opacity      = '1';
   $('settingsRow').style.pointerEvents = 'auto';
 }
 
 $('startBtn').addEventListener('click', startStop);
 $('resetBtn').addEventListener('click', reset);
-$('repPlus').addEventListener('click', () => { repsThisSet++; $('repCount').textContent = repsThisSet; });
-$('repMinus').addEventListener('click', () => { if (repsThisSet > 0) { repsThisSet--; $('repCount').textContent = repsThisSet; } });
 
 // Init
 getSettings();
