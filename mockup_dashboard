@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hosti — Area Inventory</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #E8E5DE; display: flex; justify-content: center; padding: 32px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; min-height: 100vh; }
+  .hw { width: 390px; background: #F5F2EC; border-radius: 40px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.18); }
+  .hbar { background: #3C4A42; padding: 52px 20px 14px; display: flex; align-items: center; gap: 12px; }
+  .hbar-back { font-size: 22px; color: #9FE1CB; cursor: pointer; }
+  .hbar-title { font-size: 16px; font-weight: 500; color: #fff; flex: 1; }
+  .hbar-more { font-size: 20px; color: rgba(255,255,255,0.45); }
+  .hsession { background: #3C4A42; padding: 0 20px 18px; }
+  .hsession-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .hsession-stat { font-size: 13px; color: rgba(255,255,255,0.6); }
+  .hsession-stat span { color: #fff; font-weight: 500; }
+  .hsession-stat span.g { color: #5DCAA5; }
+  .hsession-pill { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 5px 12px; }
+  .hdivider { width: 1px; height: 12px; background: rgba(255,255,255,0.15); }
+  .hprogress-track { background: rgba(255,255,255,0.12); border-radius: 4px; height: 4px; }
+  .hprogress-fill { background: #1D9E75; border-radius: 4px; height: 4px; width: 43%; }
+  .hprogress-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+  .hprog-label { font-size: 11px; color: rgba(255,255,255,0.4); }
+  .hprog-label.active { color: #5DCAA5; font-weight: 500; }
+  .htip { margin: 12px 16px 0; background: #EDF6F2; border: 0.5px solid #9FE1CB; border-radius: 12px; padding: 12px 14px; display: flex; gap: 10px; }
+  .htip-icon { font-size: 15px; color: #0F6E56; flex-shrink: 0; margin-top: 1px; }
+  .htip-text { font-size: 12px; color: #085041; line-height: 1.55; }
+  .htip-dismiss { display: inline-block; margin-top: 7px; font-size: 12px; font-weight: 600; color: #0F6E56; cursor: pointer; }
+  .hfind { padding: 12px 16px; background: #F5F2EC; border-bottom: 0.5px solid #D3D1C7; display: flex; gap: 8px; align-items: center; }
+  .hfind-input { flex: 1; background: #fff; border: 0.5px solid #D3D1C7; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #888780; }
+  .hfind-cam { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; cursor: pointer; }
+  .hfind-cam.shelf { background: #2C3E35; color: #9FE1CB; }
+  .hfind-cam.photo { background: #EF9F27; color: #fff; }
+  .hquick { padding: 10px 16px; background: #F5F2EC; border-bottom: 0.5px solid #D3D1C7; }
+  .hquick-row { display: flex; gap: 8px; }
+  .hquick-input { flex: 1; background: #fff; border: 0.5px solid #D3D1C7; border-radius: 10px; padding: 9px 12px; font-size: 13px; color: #888780; }
+  .hquick-btn { background: #3C4A42; border-radius: 10px; padding: 9px 16px; font-size: 13px; color: #fff; font-weight: 500; white-space: nowrap; cursor: pointer; }
+  .hquick-hint { font-size: 11px; color: #B4B2A9; margin-top: 6px; }
+  .hlist { background: #fff; margin: 12px 16px; border-radius: 14px; border: 0.5px solid #D3D1C7; overflow: hidden; }
+  .hitem { padding: 13px 14px; border-bottom: 0.5px solid #F1EFE8; display: flex; align-items: center; gap: 12px; }
+  .hitem:last-child { border-bottom: none; }
+  .hitem.counted-row { background: #FAFEF9; }
+  .hitem-info { flex: 1; min-width: 0; }
+  .hitem-name { font-size: 15px; font-weight: 500; color: #2C2C2A; margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hitem-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .hitem-unit { font-size: 12px; color: #888780; }
+  .hitem-sep { font-size: 12px; color: #D3D1C7; }
+  .hitem-exp { font-size: 12px; color: #5F5E5A; }
+  .hitem-last { font-size: 12px; color: #B4B2A9; }
+  .hitem-counted { display: flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: #0F6E56; margin-top: 3px; }
+  .hstepper { display: flex; align-items: center; flex-shrink: 0; }
+  .hstep-btn { width: 36px; height: 36px; background: #F5F2EC; border: 0.5px solid #D3D1C7; font-size: 19px; color: #5F5E5A; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .hstep-btn.l { border-radius: 8px 0 0 8px; }
+  .hstep-btn.r { border-radius: 0 8px 8px 0; }
+  .hstep-val { width: 44px; height: 36px; border-top: 0.5px solid #D3D1C7; border-bottom: 0.5px solid #D3D1C7; background: #fff; font-size: 15px; font-weight: 600; color: #2C2C2A; display: flex; align-items: center; justify-content: center; }
+  .hstep-val.counted { border-color: #1D9E75; color: #0F6E56; background: #F0FAF6; }
+  .hstep-btn.counted { border-color: #1D9E75; background: #F0FAF6; color: #0F6E56; }
+  .hsubmit { margin: 0 16px 10px; background: #fff; border: 0.5px solid #D3D1C7; border-radius: 14px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .hsubmit-left { display: flex; align-items: center; gap: 10px; }
+  .hsubmit-icon { width: 34px; height: 34px; background: #E1F5EE; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #0F6E56; }
+  .hsubmit-label { font-size: 13px; font-weight: 500; color: #2C2C2A; }
+  .hsubmit-sub { font-size: 11px; color: #888780; margin-top: 2px; }
+  .hsubmit-count { font-size: 14px; font-weight: 600; color: #0F6E56; }
+  .hnext { margin: 0 16px 16px; background: #1D9E75; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .hnext-label { font-size: 14px; font-weight: 500; color: #fff; }
+  .hnext-sub { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .hnext-arrow { font-size: 22px; color: rgba(255,255,255,0.75); }
+  .hfooter { padding: 10px 20px 28px; background: #F5F2EC; border-top: 0.5px solid #D3D1C7; display: flex; justify-content: space-between; align-items: center; }
+  .hfooter-tally { font-size: 12px; color: #888780; }
+  .hfooter-tally span { color: #0F6E56; font-weight: 600; }
+  .hfooter-meta { font-size: 11px; color: #B4B2A9; }
+</style>
+</head>
+<body>
+<div class="hw">
+  <div class="hbar">
+    <i class="ti ti-arrow-left hbar-back" aria-hidden="true"></i>
+    <span class="hbar-title">Breakfast area</span>
+    <i class="ti ti-dots hbar-more" aria-hidden="true"></i>
+  </div>
+  <div class="hsession">
+    <div class="hsession-row">
+      <div class="hsession-stat"><span>3</span> of 7 counted</div>
+      <div class="hsession-pill">
+        <div class="hsession-stat"><span class="g">0</span> flags</div>
+        <div class="hdivider"></div>
+        <div class="hsession-stat"><span class="g">0</span> low</div>
+      </div>
+    </div>
+    <div class="hprogress-track"><div class="hprogress-fill"></div></div>
+    <div class="hprogress-labels">
+      <span class="hprog-label active">3 counted</span>
+      <span class="hprog-label">4 remaining</span>
+    </div>
+  </div>
+  <div class="htip">
+    <i class="ti ti-info-circle htip-icon" aria-hidden="true"></i>
+    <div>
+      <div class="htip-text">Expected figures are based on your last count and any movements since. Count what's there — Hosti handles the rest.</div>
+      <span class="htip-dismiss">Got it</span>
+    </div>
+  </div>
+  <div style="height:12px;"></div>
+  <div class="hfind">
+    <div class="hfind-input">Find a product...</div>
+    <div class="hfind-cam shelf"><i class="ti ti-camera" aria-label="Photograph shelf"></i></div>
+    <div class="hfind-cam photo"><i class="ti ti-camera-plus" aria-label="Add by photo"></i></div>
+  </div>
+  <div class="hquick">
+    <div class="hquick-row">
+      <div class="hquick-input">Quick add item name...</div>
+      <div class="hquick-btn">Add</div>
+    </div>
+    <div class="hquick-hint">Unit and supplier optional — fill in later from product list</div>
+  </div>
+  <div style="height:4px;"></div>
+  <div class="hlist">
+    <div class="hitem counted-row">
+      <div class="hitem-info">
+        <p class="hitem-name">Croissant</p>
+        <div class="hitem-meta">
+          <span class="hitem-unit">6 pack</span><span class="hitem-sep">·</span>
+          <span class="hitem-exp">exp: 7</span><span class="hitem-sep">·</span>
+          <span class="hitem-last">last: 6</span>
+        </div>
+        <div class="hitem-counted"><i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i> Counted</div>
+      </div>
+      <div class="hstepper">
+        <div class="hstep-btn l counted">−</div><div class="hstep-val counted">7</div><div class="hstep-btn r counted">+</div>
+      </div>
+    </div>
+    <div class="hitem counted-row">
+      <div class="hitem-info">
+        <p class="hitem-name">English Muffin</p>
+        <div class="hitem-meta">
+          <span class="hitem-unit">Each</span><span class="hitem-sep">·</span>
+          <span class="hitem-exp">exp: 6</span><span class="hitem-sep">·</span>
+          <span class="hitem-last">last: 5</span>
+        </div>
+        <div class="hitem-counted"><i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i> Counted</div>
+      </div>
+      <div class="hstepper">
+        <div class="hstep-btn l counted">−</div><div class="hstep-val counted">6</div><div class="hstep-btn r counted">+</div>
+      </div>
+    </div>
+    <div class="hitem counted-row">
+      <div class="hitem-info">
+        <p class="hitem-name">Everyday Bagels</p>
+        <div class="hitem-meta">
+          <span class="hitem-unit">Each</span><span class="hitem-sep">·</span>
+          <span class="hitem-exp">exp: 12</span><span class="hitem-sep">·</span>
+          <span class="hitem-last">last: 11</span>
+        </div>
+        <div class="hitem-counted"><i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i> Counted</div>
+      </div>
+      <div class="hstepper">
+        <div class="hstep-btn l counted">−</div><div class="hstep-val counted">9</div><div class="hstep-btn r counted">+</div>
+      </div>
+    </div>
+    <div class="hitem">
+      <div class="hitem-info">
+        <p class="hitem-name">GF Bagel</p>
+        <div class="hitem-meta">
+          <span class="hitem-unit">Each</span><span class="hitem-sep">·</span>
+          <span class="hitem-exp">exp: 3</span><span class="hitem-sep">·</span>
+          <span class="hitem-last">last: 3</span>
+        </div>
+      </div>
+      <div class="hstepper">
+        <div class="hstep-btn l">−</div><div class="hstep-val">0</div><div class="hstep-btn r">+</div>
+      </div>
+    </div>
+    <div class="hitem">
+      <div class="hitem-info">
+        <p class="hitem-name">GF Eng Muffin</p>
+        <div class="hitem-meta">
+          <span class="hitem-unit">Each</span><span class="hitem-sep">·</span>
+          <span class="hitem-exp">exp: 9</span><span class="hitem-sep">·</span>
+          <span class="hitem-last">last: 8</span>
+        </div>
+      </div>
+      <div class="hstepper">
+        <div class="hstep-btn l">−</div><div class="hstep-val">0</div><div class="hstep-btn r">+</div>
+      </div>
+    </div>
+    <div class="hitem">
+      <div class="hitem-info">
+        <p class="hitem-name">Hash Browns</p>
+        <div class="hitem-meta">
+          <span class="hitem-unit">Pack</span><span class="hitem-sep">·</span>
+          <span class="hitem-exp">exp: 12</span><span class="hitem-sep">·</span>
+          <span class="hitem-last">last: 10</span>
+        </div>
+      </div>
+      <div class="hstepper">
+        <div class="hstep-btn l">−</div><div class="hstep-val">0</div><div class="hstep-btn r">+</div>
+      </div>
+    </div>
+    <div class="hitem">
+      <div class="hitem-info">
+        <p class="hitem-name">Ham</p>
+        <div class="hitem-meta">
+          <span class="hitem-unit">kg</span><span class="hitem-sep">·</span>
+          <span class="hitem-exp">exp: 2</span><span class="hitem-sep">·</span>
+          <span class="hitem-last">last: 1.8</span>
+        </div>
+      </div>
+      <div class="hstepper">
+        <div class="hstep-btn l">−</div><div class="hstep-val">0</div><div class="hstep-btn r">+</div>
+      </div>
+    </div>
+  </div>
+  <div class="hsubmit">
+    <div class="hsubmit-left">
+      <div class="hsubmit-icon"><i class="ti ti-clipboard-check" aria-hidden="true"></i></div>
+      <div>
+        <div class="hsubmit-label">Review and submit area</div>
+        <div class="hsubmit-sub">Uncounted items saved as 0</div>
+      </div>
+    </div>
+    <span class="hsubmit-count">3 / 7</span>
+  </div>
+  <div class="hnext">
+    <div>
+      <div class="hnext-label">Next area</div>
+      <div class="hnext-sub">Cleaning · 0 of 5 counted</div>
+    </div>
+    <i class="ti ti-arrow-right hnext-arrow" aria-hidden="true"></i>
+  </div>
+  <div class="hfooter">
+    <span class="hfooter-tally"><span>3</span> of 7 items counted</span>
+    <span class="hfooter-meta">Started 9:04am · Mere T.</span>
+  </div>
+</div>
+</body>
+</html>
