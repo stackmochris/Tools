@@ -7,6 +7,484 @@
   <title>STAR OPS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F5F5F4;
+      --ink: #111111;
+      --muted: #6B6B6B;
+      --faint: #A3A3A3;
+      --line: #E6E6E6;
+      --surface: #FFFFFF;
+      --green: #1F9D55;
+      --amber: #C4841D;
+      --red: #C0392B;
+      --tab-h: 52px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 15px;
+      overflow: hidden;
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 430px;
+      margin: 0 auto;
+      background: var(--bg);
+    }
+    header { padding: 22px 22px 8px; flex-shrink: 0; }
+    .header-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .brand { font-weight: 700; font-size: 18px; letter-spacing: -0.03em; }
+    .brand span { color: var(--muted); font-weight: 400; }
+    .date-display { font-size: 11px; font-weight: 500; color: var(--faint); letter-spacing: 0.12em; text-transform: uppercase; }
+    nav { display: flex; padding: 0 8px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    nav button { flex: 1; height: var(--tab-h); background: none; border: none; color: var(--faint); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; position: relative; }
+    nav button.active { color: var(--ink); }
+    nav button.active::after { content: ''; position: absolute; left: 28%; right: 28%; bottom: -1px; height: 1px; background: var(--ink); }
+    main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .tab-panel { display: none; padding: 20px 22px 40px; }
+    .tab-panel.active { display: block; }
+    .status-line { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+    .track { height: 2px; background: var(--line); margin-bottom: 22px; overflow: hidden; }
+    .track > i { display: block; height: 100%; background: var(--green); width: 0; transition: width .35s ease; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; }
+    .row-title { font-weight: 500; font-size: 15px; }
+    .row-meta { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .row-meta.done { color: var(--green); }
+    .row-meta.warn { color: var(--amber); }
+    .list-body { display: none; padding: 4px 0 14px; }
+    .list-open .list-body { display: block; }
+    .list-open .row { border-bottom-color: transparent; }
+    .check { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; }
+    .check:last-child { border-bottom: none; }
+    .box { width: 16px; height: 16px; border: 1.5px solid #BDBDBD; border-radius: 3px; flex-shrink: 0; display: grid; place-items: center; transition: transform .12s ease, background .12s ease, border-color .12s ease; }
+    .check.done .box { background: var(--green); border-color: var(--green); }
+    .check.done .box::after { content: ''; width: 4px; height: 8px; border: 1.5px solid #fff; border-top: 0; border-left: 0; transform: rotate(45deg) translateY(-1px); }
+    .check.current .box { background: var(--ink); border-color: var(--ink); }
+    .check-label { font-size: 14px; line-height: 1.35; color: var(--ink); }
+    .check.done .check-label { color: var(--faint); text-decoration: line-through; }
+    .check.current .check-label { font-weight: 600; }
+    .check:active .box { transform: scale(.88); }
+    .block-title { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin: 6px 0 10px; }
+    .guest { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .guest-name { font-weight: 600; font-size: 15px; }
+    .guest-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .guest-notes { font-size: 13px; color: var(--amber); margin-top: 4px; }
+    .empty { font-size: 13px; color: var(--faint); padding: 8px 0 16px; }
+    label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin: 14px 0 6px; }
+    input, select, textarea { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; color: var(--ink); font-family: inherit; font-size: 14px; outline: none; appearance: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--ink); }
+    textarea { min-height: 76px; resize: vertical; }
+    .date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn { width: 100%; margin-top: 16px; padding: 13px; border: none; border-radius: 8px; background: var(--ink); color: #fff; font-family: inherit; font-weight: 600; font-size: 14px; cursor: pointer; }
+    .btn:active { opacity: .75; }
+    .btn-ghost { background: none; color: var(--muted); border: 1px solid var(--line); }
+    .btn-danger { width: auto; margin: 8px 0 0; padding: 6px 10px; background: none; color: var(--red); border: 1px solid var(--red); font-size: 12px; }
+    .booking { padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .booking-top { display: flex; justify-content: space-between; gap: 8px; }
+    .booking-name { font-weight: 600; }
+    .st { font-size: 12px; color: var(--muted); }
+    .st.arriving, .st.inhouse { color: var(--green); }
+    .st.departing { color: var(--amber); }
+    .booking-dates { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .sync { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+    .sync bdot { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); display: block; }
+    .sync bdot.ok { background: var(--green); }
+    .sync bdot.err { background: var(--red); }
+    .sync a { margin-left: auto; color: var(--ink); cursor: pointer; font-weight: 500; }
+    .count { display: flex; align-items: baseline; gap: 14px; padding: 8px 0 18px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+    .count-num { font-size: 48px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
+    .count-num.urgent { color: var(--red); }
+    .count-label { font-size: 13px; color: var(--muted); }
+    .count-label strong { display: block; color: var(--ink); font-size: 14px; margin-bottom: 2px; }
+    .provider { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+    .provider.done .pname { color: var(--faint); text-decoration: line-through; }
+    .pname { font-weight: 500; font-size: 14px; }
+    .ptype { font-size: 11px; color: var(--faint); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 1px; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(17,17,17,.45); z-index: 20; align-items: flex-end; }
+    .overlay.open { display: flex; }
+    .sheet { background: var(--bg); width: 100%; max-width: 430px; margin: 0 auto; padding: 22px; border-radius: 16px 16px 0 0; }
+    .sheet h3 { font-size: 16px; margin-bottom: 12px; }
+    .sheet-actions { display: flex; gap: 10px; }
+    .sheet-actions .btn { flex: 1; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(12px); background: var(--ink); color: #fff; font-size: 13px; padding: 10px 14px; border-radius: 8px; opacity: 0; pointer-events: none; transition: .2s ease; z-index: 30; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
 </head>
-<body>placeholder</body>
+<body>
+<div id="app">
+  <header>
+    <div class="header-row">
+      <div class="brand">STAR<span> OPS</span></div>
+      <div class="date-display" id="headerDate"></div>
+    </div>
+  </header>
+  <nav>
+    <button class="active" id="tab-bookings" onclick="switchTab('bookings')">Bookings</button>
+    <button id="tab-rooms" onclick="switchTab('rooms')">Rooms</button>
+    <button id="tab-admin" onclick="switchTab('admin')">Admin</button>
+  </nav>
+  <main>
+    <div class="tab-panel active" id="panel-bookings">
+      <div class="block-title">Today · <span id="todayDateLabel"></span></div>
+      <div id="todayArrivals"></div>
+      <div id="todayInhouse"></div>
+      <div id="todayEmpty" class="empty" hidden>No arrivals or in-house guests today.</div>
+      <div class="sync" style="margin-top:18px">
+        <bdot id="syncDot"></bdot>
+        <span id="syncStatus">Saved on this phone</span>
+        <a onclick="openSettings()">Sheets</a>
+      </div>
+      <div class="block-title">Log anomaly</div>
+      <label>Guest</label>
+      <input type="text" id="guestName" placeholder="Smith">
+      <label>Room</label>
+      <select id="guestRoom">
+        <option value="">Select room</option>
+        <option value="Room 1 – 2BR">Room 1 – 2BR Apartment</option>
+        <option value="Room 2 – Studio">Room 2 – Studio</option>
+        <option value="Room 3 – Studio">Room 3 – Studio</option>
+      </select>
+      <div class="date-row">
+        <div><label>Check-in</label><input type="date" id="checkIn"></div>
+        <div><label>Check-out</label><input type="date" id="checkOut"></div>
+      </div>
+      <label>Notes</label>
+      <textarea id="guestNotes" placeholder="Late arrival, extra beds, dietary…"></textarea>
+      <button class="btn" onclick="addBooking()">Add</button>
+      <div class="block-title" style="margin-top:28px">Logged</div>
+      <div id="bookingList"></div>
+    </div>
+    <div class="tab-panel" id="panel-rooms">
+      <div class="status-line" id="roomsStatus">0 of 6 lists done</div>
+      <div class="track"><i id="roomsTrack"></i></div>
+      <div id="accordion"></div>
+    </div>
+    <div class="tab-panel" id="panel-admin">
+      <div class="count">
+        <div class="count-num" id="countdownDays">—</div>
+        <div class="count-label"><strong>Bills</strong><span id="countdownSubtext">Until the 20th</span></div>
+      </div>
+      <div class="block-title">Providers</div>
+      <div id="providerList"></div>
+      <button class="btn btn-ghost" onclick="resetProviders()">Reset providers</button>
+      <div class="block-title" style="margin-top:28px">Monthly</div>
+      <div id="admin-accordion"></div>
+    </div>
+  </main>
+</div>
+<div class="overlay" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+  <div class="sheet">
+    <h3>Google Sheets hook</h3>
+    <label>Webhook URL</label>
+    <input type="text" id="sheetsUrl" placeholder="https://script.google.com/…">
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" onclick="closeSettings()">Cancel</button>
+      <button class="btn" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="deleteModal" onclick="if(event.target===this)closeDelete()">
+  <div class="sheet">
+    <h3>Remove <span id="deleteGuestName"></span>?</h3>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" onclick="closeDelete()">Cancel</button>
+      <button class="btn" onclick="confirmDelete()">Remove</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const CHECKLISTS = [
+  { key:'pulse-am', title:'Pulse AM', items:[
+    "Check today's check-ins and check-outs",
+    'Check upcoming arrivals (next 3 days)',
+    "Note any special requirements for today's guests"
+  ]},
+  { key:'r2', title:'Room 2 \u00b7 Studio', items:[
+    'Strip bedding','Sheets to pick-up bag',
+    'Towels, pillowcases and shower curtain to in-house laundry',
+    'Take mats outside to air \u2014 bathroom, kitchen, entrance',
+    'Jif and hot water in sink \u2014 wipe: countertops, side tables, dining table, fridge shelves, microwave interior, cupboard shelves',
+    'Bathroom vanity','Bathroom mirror','Towel rack',
+    'Boil kettle \u2014 spray toilet, pour boiled water, wipe and dry',
+    'Top up soaps, shampoo, conditioner, toilet paper','Make bed/s',
+    'Dress room \u2014 pillowcases, coverlets, towels in rack, dish cloth, tea towel, kitchen hand towel, shower mat',
+    'Hang fresh shower curtain',
+    'Check consumables \u2014 teabags, coffee, sugar, biscuits, milk',
+    'Boil kettle \u2014 Jif and antiseptic in mop bucket',
+    'Mop floors \u2014 flood mop then regular mop bathroom / regular mop kitchen and entry',
+    'Vacuum','Bring mats back in'
+  ]},
+  { key:'r3', title:'Room 3 \u00b7 Studio', items:[
+    'Strip bedding','Sheets to pick-up bag',
+    'Towels, pillowcases and shower curtain to in-house laundry',
+    'Take mats outside to air \u2014 bathroom, kitchen, entrance',
+    'Jif and hot water in sink \u2014 wipe: countertops, side tables, dining table, fridge shelves, microwave interior, cupboard shelves',
+    'Bathroom vanity','Bathroom mirror','Towel rack',
+    'Boil kettle \u2014 spray toilet, pour boiled water, wipe and dry',
+    'Top up soaps, shampoo, conditioner, toilet paper','Make bed/s',
+    'Dress room \u2014 pillowcases, coverlets, towels in rack, dish cloth, tea towel, kitchen hand towel, shower mat',
+    'Hang fresh shower curtain',
+    'Check consumables \u2014 teabags, coffee, sugar, biscuits, milk',
+    'Boil kettle \u2014 Jif and antiseptic in mop bucket',
+    'Mop floors \u2014 flood mop then regular mop bathroom / regular mop kitchen and entry',
+    'Vacuum','Bring mats back in'
+  ]},
+  { key:'r1', title:'Room 1 \u00b7 2BR', items:[
+    'Strip bedding','Sheets to pick-up bag',
+    'Towels, pillowcases and shower curtain to in-house laundry',
+    'Take mats outside to air \u2014 bathroom, kitchen, entrance',
+    'Jif and hot water in sink \u2014 wipe: countertops, side tables, dining table, fridge shelves, microwave interior, cupboard shelves',
+    'Bathroom vanity','Bathroom mirror','Shower glass','Towel rack',
+    'Boil kettle \u2014 spray toilet, pour boiled water, wipe and dry',
+    'Top up soaps, shampoo, conditioner, toilet paper','Make bed/s',
+    'Dress room \u2014 pillowcases, coverlets, towels in rack, dish cloth, tea towel, kitchen hand towel, shower mat',
+    'Hang fresh shower curtain',
+    'Check consumables \u2014 teabags, coffee, sugar, biscuits, milk',
+    'Boil kettle \u2014 Jif and antiseptic in mop bucket',
+    'Mop floors \u2014 flood mop then regular mop bathroom / regular mop kitchen and entry',
+    'Vacuum','Bring mats back in'
+  ]},
+  { key:'grounds', title:'Grounds', items:[
+    'Clear paths of leaves / debris','Check carpark area','Mow and edge lawns',
+    'Water plants if needed','Empty outdoor bin if needed','Check letterbox',
+    'Inspect exterior of all units for issues',
+    'Note any maintenance tasks \u2014 waterblasting, paint touch-ups, tree pruning, etc.'
+  ]},
+  { key:'pulse-pm', title:'Pulse PM', items:[
+    'Review and respond to any unanswered messages',
+    'Confirm breakfast covers for tomorrow',
+    'Set up breakfast trays for morning',
+    'Check upcoming arrivals (next 3 days) \u2014 any anomalies to log?'
+  ]}
+];
+const PROVIDERS = [
+  { id:'northland-waste', name:'Northland Waste', type:'Waste / Recycling' },
+  { id:'powershop', name:'Powershop', type:'Electricity' },
+  { id:'2degrees', name:'2degrees Broadband', type:'Internet' },
+  { id:'water', name:'Water / Council Rates', type:'Council' },
+  { id:'apparel-master', name:'Apparel Master', type:'Linen / Apparel' },
+  { id:'insurance', name:'Insurance', type:'Business' }
+];
+const ADMIN_CHECKLIST = {
+  key:'admin', title:'Monthly admin',
+  items:["Review month's occupancy rate",'Check Booking.com review responses','Update pricing for next month if needed','Confirm upcoming bookings are accurate','Check any outstanding issues with units']
+};
+function loadState() { try { return JSON.parse(localStorage.getItem('starops') || '{}'); } catch { return {}; } }
+function saveState(s) { localStorage.setItem('starops', JSON.stringify(s)); }
+let state = loadState();
+if (!state.bookings) state.bookings = [];
+if (!state.checks) state.checks = {};
+if (!state.providers) state.providers = {};
+if (!state.sheetsUrl) state.sheetsUrl = '';
+if (!state.lastReset) state.lastReset = '';
+function nzToday() { return new Date().toLocaleDateString('en-CA', { timeZone: 'Pacific/Auckland' }); }
+const todayKey = nzToday();
+if (state.lastReset !== todayKey) { state.checks = {}; state.providers = {}; state.lastReset = todayKey; saveState(state); }
+let deleteTargetId = null;
+let holdTimer = null;
+function todayStr() { return nzToday(); }
+function formatDate(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return parseInt(day,10) + ' ' + months[parseInt(m,10)-1];
+}
+function updateHeaderDate() {
+  const fmt = new Intl.DateTimeFormat('en-NZ', { timeZone: 'Pacific/Auckland', weekday:'short', day:'numeric', month:'short' });
+  const label = fmt.format(new Date()).toUpperCase();
+  document.getElementById('headerDate').textContent = label;
+  document.getElementById('todayDateLabel').textContent = label;
+}
+function getBookingStatus(b) {
+  const today = todayStr();
+  if (b.checkIn === today) return 'arriving';
+  if (b.checkOut === today) return 'departing';
+  if (b.checkIn < today && b.checkOut > today) return 'inhouse';
+  if (b.checkOut < today) return 'departed';
+  return 'upcoming';
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1600);
+}
+function buzz() { try { navigator.vibrate && navigator.vibrate(12); } catch(e) {} }
+function renderTodayCard() {
+  const today = todayStr();
+  const arrivals = state.bookings.filter(b => b.checkIn === today);
+  const inhouse = state.bookings.filter(b => b.checkIn < today && b.checkOut > today);
+  const departing = state.bookings.filter(b => b.checkOut === today && b.checkIn !== today);
+  const paint = (list, verb) => list.map(b => '<div class="guest"><div class="guest-name">'+b.name+(b.room?' \u00b7 '+b.room:'')+'</div><div class="guest-meta">'+verb+' \u00b7 '+formatDate(b.checkIn)+' \u2192 '+formatDate(b.checkOut)+'</div>'+(b.notes?'<div class="guest-notes">'+b.notes+'</div>':'')+'</div>').join('');
+  document.getElementById('todayArrivals').innerHTML = arrivals.length ? '<div class="block-title">Arriving</div>'+paint(arrivals,'Arriving') : '';
+  const stay = inhouse.concat(departing);
+  document.getElementById('todayInhouse').innerHTML = stay.length ? '<div class="block-title">In house</div>'+paint(inhouse,'In house')+paint(departing,'Checking out') : '';
+  document.getElementById('todayEmpty').hidden = !!(arrivals.length || stay.length);
+}
+function addBooking() {
+  const name = document.getElementById('guestName').value.trim();
+  const room = document.getElementById('guestRoom').value;
+  const checkIn = document.getElementById('checkIn').value;
+  const checkOut = document.getElementById('checkOut').value;
+  const notes = document.getElementById('guestNotes').value.trim();
+  if (!name || !checkIn || !checkOut) { toast('Name and both dates needed'); return; }
+  if (checkOut <= checkIn) { toast('Check-out must be after check-in'); return; }
+  state.bookings.push({ id: Date.now().toString(), name:name, room:room, checkIn:checkIn, checkOut:checkOut, notes:notes, created: new Date().toISOString() });
+  saveState(state);
+  renderBookings();
+  renderTodayCard();
+  syncToSheets(state.bookings[state.bookings.length-1]);
+  document.getElementById('guestName').value = '';
+  document.getElementById('guestRoom').value = '';
+  document.getElementById('guestNotes').value = '';
+  document.getElementById('checkIn').value = todayStr();
+  document.getElementById('checkOut').value = '';
+}
+function renderBookings() {
+  const el = document.getElementById('bookingList');
+  if (!state.bookings.length) { el.innerHTML = '<div class="empty">Nothing logged.</div>'; return; }
+  const statusLabel = { arriving:'Arriving', inhouse:'In house', departing:'Leaving', departed:'Gone', upcoming:'Upcoming' };
+  el.innerHTML = state.bookings.slice().sort(function(a,b){return a.checkIn.localeCompare(b.checkIn);}).map(function(b){
+    const st = getBookingStatus(b);
+    return '<div class="booking"><div class="booking-top"><div class="booking-name">'+b.name+'</div><div class="st '+st+'">'+statusLabel[st]+'</div></div><div class="booking-dates">'+formatDate(b.checkIn)+' \u2192 '+formatDate(b.checkOut)+(b.room?' \u00b7 '+b.room:'')+'</div>'+(b.notes?'<div class="guest-notes">'+b.notes+'</div>':'')+'<button class="btn-danger" onclick="openDelete(\''+b.id+'\', \''+b.name.replace(/'/g,"\\'")+'\')">Remove</button></div>';
+  }).join('');
+}
+function openDelete(id, name) { deleteTargetId = id; document.getElementById('deleteGuestName').textContent = name; document.getElementById('deleteModal').classList.add('open'); }
+function closeDelete() { deleteTargetId = null; document.getElementById('deleteModal').classList.remove('open'); }
+function confirmDelete() { state.bookings = state.bookings.filter(function(b){return b.id !== deleteTargetId;}); saveState(state); renderBookings(); renderTodayCard(); closeDelete(); }
+function listProgress(key, items) { const done = state.checks[key] || []; return { done:done, count:done.length, total:items.length, complete:done.length === items.length }; }
+function metaFor(count, total) { if (count === 0) return ['\u2014', '']; if (count === total) return ['Done', 'done']; return [(total-count)+' left', 'warn']; }
+function buildAccordion() {
+  document.getElementById('accordion').innerHTML = CHECKLISTS.map(function(cl){
+    return '<div class="list" id="acc-'+cl.key+'"><div class="row" onpointerdown="startHold(\''+cl.key+'\')" onpointerup="endHold(\''+cl.key+'\')" onpointerleave="cancelHold()"><div class="row-title">'+cl.title+'</div><div class="row-meta" id="badge-'+cl.key+'"></div></div><div class="list-body"><div id="list-'+cl.key+'"></div></div></div>';
+  }).join('');
+  CHECKLISTS.forEach(function(cl){ renderChecklist(cl.key); });
+  openFirstOpen();
+  updateRoomsStatus();
+}
+function toggleAccordion(key) {
+  const item = document.getElementById('acc-'+key);
+  const open = item.classList.contains('list-open');
+  document.querySelectorAll('#accordion .list').forEach(function(n){ n.classList.remove('list-open'); });
+  if (!open) item.classList.add('list-open');
+}
+function startHold(key) {
+  holdTimer = setTimeout(function(){ holdTimer = 'fired'; if (confirm('Reset this list?')) resetList(key); }, 650);
+}
+function endHold(key) {
+  if (holdTimer && holdTimer !== 'fired') { clearTimeout(holdTimer); toggleAccordion(key); }
+  holdTimer = null;
+}
+function cancelHold() { if (holdTimer && holdTimer !== 'fired') clearTimeout(holdTimer); holdTimer = null; }
+function renderChecklist(key) {
+  const cl = CHECKLISTS.find(function(c){return c.key===key;}) || (key==='admin' ? ADMIN_CHECKLIST : null);
+  if (!cl) return;
+  const el = document.getElementById('list-'+key);
+  const badge = document.getElementById('badge-'+key);
+  const prog = listProgress(key, cl.items);
+  if (badge) { const m = metaFor(prog.count, prog.total); badge.textContent = m[0]; badge.className = 'row-meta '+m[1]; }
+  if (!el) return;
+  const firstOpen = cl.items.findIndex(function(_,i){return !(prog.done.indexOf(i)>=0);});
+  el.innerHTML = cl.items.map(function(item,i){
+    const checked = prog.done.indexOf(i)>=0;
+    const current = !checked && i===firstOpen;
+    return '<div class="check '+(checked?'done':'')+' '+(current?'current':'')+'" onclick="toggleCheck(\''+key+'\','+i+')"><div class="box"></div><div class="check-label">'+item+'</div></div>';
+  }).join('');
+  updateRoomsStatus();
+}
+function toggleCheck(key, i) {
+  if (!state.checks[key]) state.checks[key] = [];
+  const idx = state.checks[key].indexOf(i);
+  if (idx >= 0) state.checks[key].splice(idx, 1); else state.checks[key].push(i);
+  saveState(state); buzz(); renderChecklist(key);
+  const cl = CHECKLISTS.find(function(c){return c.key===key;});
+  if (cl && (state.checks[key]||[]).length === cl.items.length) {
+    toast(cl.title + ' done');
+    setTimeout(function(){ document.getElementById('acc-'+key).classList.remove('list-open'); openFirstOpen(); }, 280);
+  }
+}
+function resetList(key) { state.checks[key] = []; saveState(state); renderChecklist(key); }
+function openFirstOpen() {
+  const next = CHECKLISTS.find(function(cl){ return (state.checks[cl.key]||[]).length < cl.items.length; });
+  document.querySelectorAll('#accordion .list').forEach(function(n){ n.classList.remove('list-open'); });
+  if (next) document.getElementById('acc-'+next.key).classList.add('list-open');
+}
+function updateRoomsStatus() {
+  const doneLists = CHECKLISTS.filter(function(cl){ return (state.checks[cl.key]||[]).length === cl.items.length; }).length;
+  const el = document.getElementById('roomsStatus');
+  const bar = document.getElementById('roomsTrack');
+  if (el) el.textContent = doneLists + ' of ' + CHECKLISTS.length + ' lists done';
+  if (bar) bar.style.width = (doneLists/CHECKLISTS.length)*100 + '%';
+}
+function renderProviders() {
+  document.getElementById('providerList').innerHTML = PROVIDERS.map(function(p){
+    const done = !!state.providers[p.id];
+    return '<div class="provider '+(done?'done':'')+'" onclick="toggleProvider(\''+p.id+'\')"><div class="box" style="'+(done?'background:var(--green);border-color:var(--green)':'')+'"></div><div><div class="pname">'+p.name+'</div><div class="ptype">'+p.type+'</div></div></div>';
+  }).join('');
+}
+function toggleProvider(id) { state.providers[id] = !state.providers[id]; saveState(state); renderProviders(); buzz(); }
+function resetProviders() { state.providers = {}; saveState(state); renderProviders(); }
+function buildAdminAccordion() {
+  const cl = ADMIN_CHECKLIST;
+  document.getElementById('admin-accordion').innerHTML = '<div class="list list-open" id="acc-'+cl.key+'"><div class="row" onclick="toggleAccordion(\''+cl.key+'\')"><div class="row-title">'+cl.title+'</div><div class="row-meta" id="badge-'+cl.key+'"></div></div><div class="list-body"><div id="list-'+cl.key+'"></div></div></div>';
+  renderChecklist(cl.key);
+}
+function renderCountdown() {
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Pacific/Auckland' }));
+  let target = new Date(now.getFullYear(), now.getMonth(), 20);
+  if (now.getDate() > 20) target = new Date(now.getFullYear(), now.getMonth()+1, 20);
+  const diff = Math.ceil((target - now) / 86400000);
+  const daysEl = document.getElementById('countdownDays');
+  daysEl.textContent = diff <= 0 ? '0' : diff;
+  daysEl.classList.toggle('urgent', diff <= 3);
+  document.getElementById('countdownSubtext').textContent = diff <= 0 ? 'Due today' : 'days until the 20th';
+}
+async function syncToSheets(booking) {
+  const url = state.sheetsUrl; if (!url) return;
+  const txt = document.getElementById('syncStatus');
+  const dot = document.getElementById('syncDot');
+  txt.textContent = 'Syncing\u2026';
+  try {
+    await fetch(url, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'addBooking', booking:booking }) });
+    dot.className = 'ok';
+    txt.textContent = 'Synced \u00b7 ' + new Date().toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    dot.className = 'err';
+    txt.textContent = 'Sync failed \u2014 saved on this phone';
+  }
+}
+function updateSyncStatus() {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncStatus');
+  if (state.sheetsUrl) { dot.className = 'ok'; txt.textContent = 'Sheets connected'; }
+  else { dot.className = ''; txt.textContent = 'Saved on this phone'; }
+}
+function openSettings() { document.getElementById('sheetsUrl').value = state.sheetsUrl || ''; document.getElementById('settingsModal').classList.add('open'); }
+function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+function saveSettings() { state.sheetsUrl = document.getElementById('sheetsUrl').value.trim(); saveState(state); updateSyncStatus(); closeSettings(); }
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('nav button').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+function init() {
+  try { updateHeaderDate(); } catch(e) {}
+  try { renderTodayCard(); renderBookings(); } catch(e) {}
+  try { buildAccordion(); } catch(e) {}
+  try { renderProviders(); buildAdminAccordion(); renderCountdown(); } catch(e) {}
+  try { updateSyncStatus(); document.getElementById('checkIn').value = todayStr(); } catch(e) {}
+  const boot = new URLSearchParams(location.search).get('tab');
+  if (boot) switchTab(boot);
+}
+init();
+</script>
+</body>
 </html>
