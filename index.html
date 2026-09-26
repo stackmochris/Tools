@@ -17,6 +17,8 @@
   --teal-light: #d0e4f0;
   --amber:      #c47b2b;
   --green:      #2d7a4f;
+  --frond:      #3d6b4f;
+  --ink:        #1f2a24;
   --shadow:     0 2px 10px rgba(59,63,74,0.10);
   --shadow-md:  0 4px 20px rgba(59,63,74,0.13);
   --radius:     12px;
@@ -145,6 +147,8 @@ body {
 .card-tracker { --accent: var(--teal); }
 .card-timer   { --accent: var(--amber); }
 .card-motel   { --accent: var(--green); }
+.card-floor   { --accent: var(--frond); }
+.card-desk    { --accent: var(--ink); }
 
 .site-footer {
   margin-top: 44px;
@@ -164,6 +168,24 @@ body {
 </header>
 
 <div class="cards">
+
+  <a class="card card-floor" href="https://stackmochris.github.io/paihia-star-ops/floor/">
+    <div class="card-icon">🌿</div>
+    <div class="card-body">
+      <div class="card-title">Star Floor</div>
+      <div class="card-desc">Casual staff — rooms, find things, used-last, flip checklists</div>
+    </div>
+    <div class="card-arrow">→</div>
+  </a>
+
+  <a class="card card-desk" href="https://stackmochris.github.io/paihia-star-ops/desk/">
+    <div class="card-icon">📋</div>
+    <div class="card-body">
+      <div class="card-title">Star Desk</div>
+      <div class="card-desc">Chris + Mara — store, keys, SOPs, anomalies, day-to-day</div>
+    </div>
+    <div class="card-arrow">→</div>
+  </a>
 
   <a class="card card-tracker" href="https://stackmochris.github.io/Tools/tracker/">
     <div class="card-icon">🦍</div>
@@ -187,7 +209,7 @@ body {
     <div class="card-icon">🏨</div>
     <div class="card-body">
       <div class="card-title">Motel Checks</div>
-      <div class="card-desc">Daily checklists for guest turnovers &amp; room checks</div>
+      <div class="card-desc">Room-clean checklists — guest turnovers &amp; room checks</div>
     </div>
     <div class="card-arrow">→</div>
   </a>
