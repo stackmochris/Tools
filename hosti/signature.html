@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Copy Hosti signature</title>
+  <style>
+    body { margin: 0; background: #f5f3ee; font-family: Arial, Helvetica, sans-serif; }
+    .wrap { max-width: 640px; margin: 48px auto; padding: 0 20px; }
+    button {
+      appearance: none;
+      border: 0;
+      background: #3b3f4a;
+      color: #f5f3ee;
+      font: 600 14px/1 Arial, Helvetica, sans-serif;
+      padding: 12px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 28px;
+    }
+    button.done { background: #1b4f72; }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      padding: 28px 32px;
+    }
+    .hint { color: #6b7280; font-size: 13px; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <button id="copy" type="button">Copy signature</button>
+    <div class="card" id="sig">
+      <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#2B3A4A;border-collapse:collapse;">
+        <tr>
+          <td style="border-right:3px solid #C8782C;padding-right:16px;vertical-align:middle;">
+            <img src="https://raw.githubusercontent.com/stackmochris/Tools/main/hosti/hosti-wordmark.png" width="128" height="44" alt="Hosti" style="display:block;border:0;width:128px;height:44px;" />
+          </td>
+          <td style="padding-left:16px;vertical-align:middle;font-family:Arial,Helvetica,sans-serif;">
+            <div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#2B3A4A;line-height:1.2;">Chris Simpson</div>
+            <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#5A6B7B;margin-top:2px;">Sales Manager</div>
+            <div style="font-family:Arial,Helvetica,sans-serif;margin-top:6px;font-size:13px;line-height:1.45;">
+              <a href="mailto:chris@hosti.co.nz" style="font-family:Arial,Helvetica,sans-serif;color:#1b4f72;text-decoration:none;">chris@hosti.co.nz</a>
+            </div>
+            <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.45;">
+              <a href="tel:+64275025514" style="font-family:Arial,Helvetica,sans-serif;color:#1b4f72;text-decoration:none;">027 502 5514</a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <p class="hint">Then Gmail → Settings → See all settings → Signature → paste.</p>
+  </div>
+  <script>
+    document.getElementById("copy").addEventListener("click", async function () {
+      var html = document.getElementById("sig").innerHTML.trim();
+      var plain = "Chris Simpson\nSales Manager\nchris@hosti.co.nz\n027 502 5514";
+      var btn = document.getElementById("copy");
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": new Blob([html], { type: "text/html" }),
+            "text/plain": new Blob([plain], { type: "text/plain" })
+          })
+        ]);
+        btn.textContent = "Copied. Paste into Gmail.";
+        btn.className = "done";
+      } catch (e) {
+        btn.textContent = "Copy failed. Select the signature and copy it.";
+      }
+    });
+  </script>
+</body>
+</html>
